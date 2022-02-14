@@ -19256,8 +19256,11 @@
 		this.toneMapping = NoToneMapping;
 		this.toneMappingExposure = 1.0; // internal properties
 
-		const _this = this;
+		const _this = this; // cyber 
 
+
+		this._this = this;
+		this.currentRenderList = null;
 		let _isContextLost = false; // internal state cache
 
 		let _currentActiveCubeFace = 0;
@@ -19286,8 +19289,10 @@
 
 		let _scissorTest = false; // frustum
 
-		const _frustum = new Frustum(); // clipping
+		const _frustum = new Frustum(); // cyber
 
+
+		this.frustum = _frustum; // clipping
 
 		let _clippingEnabled = false;
 		let _localClippingEnabled = false; // transmission
@@ -19553,11 +19558,11 @@
 			background.setClearAlpha.apply(background, arguments);
 		};
 
-		this.clear = function (color, depth, stencil) {
+		this.clear = function (color = true, depth = true, stencil = true) {
 			let bits = 0;
-			if (color === undefined || color) bits |= _gl.COLOR_BUFFER_BIT;
-			if (depth === undefined || depth) bits |= _gl.DEPTH_BUFFER_BIT;
-			if (stencil === undefined || stencil) bits |= _gl.STENCIL_BUFFER_BIT;
+			if (color) bits |= _gl.COLOR_BUFFER_BIT;
+			if (depth) bits |= _gl.DEPTH_BUFFER_BIT;
+			if (stencil) bits |= _gl.STENCIL_BUFFER_BIT;
 
 			_gl.clear(bits);
 		};
@@ -19832,8 +19837,9 @@
 
 			if (_this.sortObjects === true) {
 				currentRenderList.sort(_opaqueSort, _transparentSort);
-			} //
+			}
 
+			this.currentRenderList = currentRenderList; //
 
 			if (_clippingEnabled === true) clipping.beginShadows();
 			const shadowsArray = currentRenderState.state.shadowsArray;

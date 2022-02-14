@@ -26161,6 +26161,12 @@ function WebGLRenderer( parameters = {} ) {
 
 	const _this = this;
 
+	// cyber 
+
+	this._this = this;
+
+	this.currentRenderList = null;
+
 	let _isContextLost = false;
 
 	// internal state cache
@@ -26192,6 +26198,10 @@ function WebGLRenderer( parameters = {} ) {
 	// frustum
 
 	const _frustum = new Frustum();
+
+	// cyber
+
+	this.frustum = _frustum;
 
 	// clipping
 
@@ -26559,13 +26569,13 @@ function WebGLRenderer( parameters = {} ) {
 
 	};
 
-	this.clear = function ( color, depth, stencil ) {
+	this.clear = function ( color = true, depth = true, stencil = true ) {
 
 		let bits = 0;
 
-		if ( color === undefined || color ) bits |= 16384;
-		if ( depth === undefined || depth ) bits |= 256;
-		if ( stencil === undefined || stencil ) bits |= 1024;
+		if ( color ) bits |= 16384;
+		if ( depth ) bits |= 256;
+		if ( stencil ) bits |= 1024;
 
 		_gl.clear( bits );
 
@@ -26988,6 +26998,8 @@ function WebGLRenderer( parameters = {} ) {
 			currentRenderList.sort( _opaqueSort, _transparentSort );
 
 		}
+
+		this.currentRenderList = currentRenderList;
 
 		//
 

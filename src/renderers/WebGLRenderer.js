@@ -124,6 +124,12 @@ function WebGLRenderer( parameters = {} ) {
 
 	const _this = this;
 
+	// cyber 
+
+	this._this = this;
+
+	this.currentRenderList = null
+
 	let _isContextLost = false;
 
 	// internal state cache
@@ -155,6 +161,10 @@ function WebGLRenderer( parameters = {} ) {
 	// frustum
 
 	const _frustum = new Frustum();
+
+	// cyber
+
+	this.frustum = _frustum;
 
 	// clipping
 
@@ -951,6 +961,8 @@ function WebGLRenderer( parameters = {} ) {
 			currentRenderList.sort( _opaqueSort, _transparentSort );
 
 		}
+
+		this.currentRenderList = currentRenderList
 
 		//
 
