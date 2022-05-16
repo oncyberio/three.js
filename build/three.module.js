@@ -27312,23 +27312,23 @@ function WebGLRenderer( parameters = {} ) {
 
 		material.onBeforeRender( _this, scene, camera, geometry, object, group );
 
-		if ( material.transparent === true && material.side === DoubleSide ) {
+		// if ( material.transparent === true && material.side === DoubleSide ) {
 
-			material.side = BackSide;
-			material.needsUpdate = true;
-			_this.renderBufferDirect( camera, scene, geometry, material, object, group );
+		// 	material.side = BackSide;
+		// 	material.needsUpdate = true;
+		// 	_this.renderBufferDirect( camera, scene, geometry, material, object, group );
 
-			material.side = FrontSide;
-			material.needsUpdate = true;
-			_this.renderBufferDirect( camera, scene, geometry, material, object, group );
+		// 	material.side = FrontSide;
+		// 	material.needsUpdate = true;
+		// 	_this.renderBufferDirect( camera, scene, geometry, material, object, group );
 
-			material.side = DoubleSide;
+		// 	material.side = DoubleSide;
 
-		} else {
+		// } else {
 
-			_this.renderBufferDirect( camera, scene, geometry, material, object, group );
+		_this.renderBufferDirect( camera, scene, geometry, material, object, group );
 
-		}
+		// }
 
 		object.onAfterRender( _this, scene, camera, geometry, material, group );
 

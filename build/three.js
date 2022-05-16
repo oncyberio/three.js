@@ -20040,23 +20040,18 @@
 			object.onBeforeRender(_this, scene, camera, geometry, material, group);
 			object.modelViewMatrix.multiplyMatrices(camera.matrixWorldInverse, object.matrixWorld);
 			object.normalMatrix.getNormalMatrix(object.modelViewMatrix);
-			material.onBeforeRender(_this, scene, camera, geometry, object, group);
+			material.onBeforeRender(_this, scene, camera, geometry, object, group); // if ( material.transparent === true && material.side === DoubleSide ) {
+			// 	material.side = BackSide;
+			// 	material.needsUpdate = true;
+			// 	_this.renderBufferDirect( camera, scene, geometry, material, object, group );
+			// 	material.side = FrontSide;
+			// 	material.needsUpdate = true;
+			// 	_this.renderBufferDirect( camera, scene, geometry, material, object, group );
+			// 	material.side = DoubleSide;
+			// } else {
 
-			if (material.transparent === true && material.side === DoubleSide) {
-				material.side = BackSide;
-				material.needsUpdate = true;
+			_this.renderBufferDirect(camera, scene, geometry, material, object, group); // }
 
-				_this.renderBufferDirect(camera, scene, geometry, material, object, group);
-
-				material.side = FrontSide;
-				material.needsUpdate = true;
-
-				_this.renderBufferDirect(camera, scene, geometry, material, object, group);
-
-				material.side = DoubleSide;
-			} else {
-				_this.renderBufferDirect(camera, scene, geometry, material, object, group);
-			}
 
 			object.onAfterRender(_this, scene, camera, geometry, material, group);
 		}
