@@ -30,6 +30,7 @@ class WebXRManager extends EventDispatcher {
 
 		let referenceSpace = null;
 		let referenceSpaceType = 'local-floor';
+		let customReferenceSpace = null;
 
 		let pose = null;
 		let glBinding = null;
@@ -120,7 +121,7 @@ class WebXRManager extends EventDispatcher {
 
 			const controller = inputSourcesMap.get( event.inputSource );
 
-			if ( controller ) {
+			if ( controller !== undefined ) {
 
 				controller.dispatchEvent( { type: event.type, data: event.inputSource } );
 
@@ -132,7 +133,11 @@ class WebXRManager extends EventDispatcher {
 
 			inputSourcesMap.forEach( function ( controller, inputSource ) {
 
-				controller.disconnect( inputSource );
+				if ( controller !== undefined ) {
+
+					controller.disconnect( inputSource );
+
+				}
 
 			} );
 
@@ -187,7 +192,13 @@ class WebXRManager extends EventDispatcher {
 
 		this.getReferenceSpace = function () {
 
-			return referenceSpace;
+			return customReferenceSpace || referenceSpace;
+
+		};
+
+		this.setReferenceSpace = function ( space ) {
+
+			customReferenceSpace = space;
 
 		};
 
@@ -327,11 +338,12 @@ class WebXRManager extends EventDispatcher {
 
 			const inputSources = session.inputSources;
 
-			// Assign inputSources to available controllers
+			// Assign controllers to available inputSources
 
-			for ( let i = 0; i < controllers.length; i ++ ) {
+			for ( let i = 0; i < inputSources.length; i ++ ) {
 
-				inputSourcesMap.set( inputSources[ i ], controllers[ i ] );
+				const index = inputSources[ i ].handedness === 'right' ? 1 : 0;
+				inputSourcesMap.set( inputSources[ i ], controllers[ index ] );
 
 			}
 
@@ -559,7 +571,7 @@ class WebXRManager extends EventDispatcher {
 
 		function onAnimationFrame( time, frame ) {
 
-			pose = frame.getViewerPose( referenceSpace );
+			pose = frame.getViewerPose( customReferenceSpace || referenceSpace );
 			xrFrame = frame;
 
 			if ( pose !== null ) {
@@ -641,10 +653,14 @@ class WebXRManager extends EventDispatcher {
 
 			for ( let i = 0; i < controllers.length; i ++ ) {
 
-				const controller = controllers[ i ];
 				const inputSource = inputSources[ i ];
+				const controller = inputSourcesMap.get( inputSource );
 
-				controller.update( inputSource, frame, referenceSpace );
+				if ( controller !== undefined ) {
+
+					controller.update( inputSource, frame, customReferenceSpace || referenceSpace );
+
+				}
 
 			}
 

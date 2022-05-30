@@ -123,6 +123,11 @@
 			默认值是 *null*。
 		</p>
 
+		<h3>[property:Boolean isBufferGeometry]</h3>
+		<p>
+			Read-only flag to check if a given object is of type [name].
+		</p>
+
 		<h3>[property:Object morphAttributes]</h3>
 		<p>
 			存储 [page:BufferAttribute] 的 Hashmap，存储了几何体 morph targets 的细节信息。
@@ -152,7 +157,7 @@
 
 		<h2>方法</h2>
 
-		<h3>[page:EventDispatcher EventDispatcher] 在该类上可用的所有方法。</h3>
+		<p>[page:EventDispatcher EventDispatcher] 在该类上可用的所有方法。</p>
 
 		<h3>[method:this setAttribute]( [param:String name], [param:BufferAttribute attribute] )</h3>
 		<p>
@@ -197,7 +202,8 @@
 		<h3>[method:undefined computeTangents]()</h3>
 		<p>
 		Calculates and adds a tangent attribute to this geometry.<br />
-		The computation is only supported for indexed geometries and if position, normal, and uv attributes are defined.
+		The computation is only supported for indexed geometries and if position, normal, and uv attributes are defined. When using a tangent space normal map, prefer the MikkTSpace algorithm provided by
+		[page:BufferGeometryUtils.computeMikkTSpaceTangents] instead.
 		</p>
 
 		<h3>[method:undefined computeVertexNormals]()</h3>

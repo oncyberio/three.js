@@ -16,24 +16,25 @@
 		<script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
 
 		<script type="importmap">
-		{
-			"imports": {
-				"three": "../build/three.module.js"
+			{
+				"imports": {
+					"three": "../build/three.module.js",
+					"three-nodes/": "./jsm/nodes/"
+				}
 			}
-		}
 		</script>
 
 		<script type="module">
 
 			import * as THREE from 'three';
+			import * as Nodes from 'three-nodes/Nodes.js';
 
 			import WebGPU from './jsm/capabilities/WebGPU.js';
 			import WebGPURenderer from './jsm/renderers/webgpu/WebGPURenderer.js';
 
 			import { TeapotGeometry } from './jsm/geometries/TeapotGeometry.js';
 
-			import * as Nodes from './jsm/renderers/nodes/Nodes.js';
-			import { ShaderNode, vec3, dot } from './jsm/renderers/nodes/ShaderNode.js';
+			import { ShaderNode, vec3, dot, sampler } from 'three-nodes/Nodes.js';
 
 			import Stats from './jsm/libs/stats.module.js';
 
@@ -66,7 +67,7 @@
 				// Grid
 
 				const helper = new THREE.GridHelper( 1000, 40, 0x303030, 0x303030 );
-				helper.material.colorNode = new Nodes.AttributeNode( 'color', 'vec3' );
+				helper.material.colorNode = new Nodes.AttributeNode( 'color' );
 				helper.position.y = - 75;
 				scene.add( helper );
 
@@ -115,7 +116,7 @@
 
 				// Opacity
 				material = new Nodes.MeshBasicNodeMaterial();
-				material.colorNode = new Nodes.ColorNode( new THREE.Color( 0x0099FF ) );
+				material.colorNode = new Nodes.UniformNode( new THREE.Color( 0x0099FF ) );
 				material.opacityNode = new Nodes.TextureNode( texture );
 				material.transparent = true;
 				materials.push( material );
@@ -124,7 +125,7 @@
 				material = new Nodes.MeshBasicNodeMaterial();
 				material.colorNode = new Nodes.TextureNode( texture );
 				material.opacityNode = new Nodes.TextureNode( opacityTexture );
-				material.alphaTestNode = new Nodes.FloatNode( 0.5 );
+				material.alphaTestNode = new Nodes.UniformNode( 0.5 );
 				materials.push( material );
 
 				//
@@ -140,7 +141,7 @@
 				} );
 
 				material = new Nodes.MeshBasicNodeMaterial();
-				material.colorNode = desaturateShaderNode( { color: new Nodes.TextureNode( texture ) } );
+				material.colorNode = desaturateShaderNode.call( { color: new Nodes.TextureNode( texture ) } );
 				materials.push( material );
 
 				// Custom WGSL ( desaturate filter )
@@ -157,6 +158,23 @@
 
 				material = new Nodes.MeshBasicNodeMaterial();
 				material.colorNode = desaturateWGSLNode.call( { color: new Nodes.TextureNode( texture ) } );
+				materials.push( material );
+
+				// Custom WGSL ( get texture from keywords )
+
+				const getWGSLTextureSample = new Nodes.FunctionNode( `
+					fn getWGSLTextureSample( tex: texture_2d<f32>, tex_sampler: sampler, uv:vec2<f32> ) -> vec4<f32> {
+
+						return textureSample( tex, tex_sampler, uv ) * vec4<f32>( 0.0, 1.0, 0.0, 1.0 );
+
+					}
+				` );
+
+				const textureNode = new Nodes.TextureNode( texture );
+				//getWGSLTextureSample.keywords = { tex: textureNode, tex_sampler: sampler( textureNode ) };
+
+				material = new Nodes.MeshBasicNodeMaterial();
+				material.colorNode = getWGSLTextureSample.call( { tex: textureNode, tex_sampler: textureNode, uv: new Nodes.UVNode() } );
 				materials.push( material );
 
 				//

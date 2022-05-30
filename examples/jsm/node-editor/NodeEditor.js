@@ -20,8 +20,10 @@ import { TextureEditor } from './inputs/TextureEditor.js';
 import { BlendEditor } from './display/BlendEditor.js';
 import { NormalMapEditor } from './display/NormalMapEditor.js';
 import { UVEditor } from './accessors/UVEditor.js';
+import { MatcapUVEditor } from './accessors/MatcapUVEditor.js';
 import { PositionEditor } from './accessors/PositionEditor.js';
 import { NormalEditor } from './accessors/NormalEditor.js';
+import { PreviewEditor } from './utils/PreviewEditor.js';
 import { TimerEditor } from './utils/TimerEditor.js';
 import { OscillatorEditor } from './utils/OscillatorEditor.js';
 import { SplitEditor } from './utils/SplitEditor.js';
@@ -30,6 +32,7 @@ import { CheckerEditor } from './procedural/CheckerEditor.js';
 import { PointsEditor } from './scene/PointsEditor.js';
 import { MeshEditor } from './scene/MeshEditor.js';
 import { FileEditor } from './core/FileEditor.js';
+import { FileURLEditor } from './core/FileURLEditor.js';
 import { EventDispatcher } from 'three';
 
 Styles.icons.unlink = 'ti ti-unlink';
@@ -73,6 +76,11 @@ export const NodeList = [
 				name: 'Texture',
 				icon: 'photo',
 				nodeClass: TextureEditor
+			},
+			{
+				name: 'File URL',
+				icon: 'cloud-download',
+				nodeClass: FileURLEditor
 			}
 		]
 	},
@@ -94,6 +102,11 @@ export const NodeList = [
 				name: 'Normal',
 				icon: 'fold-up',
 				nodeClass: NormalEditor
+			},
+			{
+				name: 'Matcap UV',
+				icon: 'circle',
+				nodeClass: MatcapUVEditor
 			}
 		]
 	},
@@ -179,6 +192,11 @@ export const NodeList = [
 		icon: 'apps',
 		children: [
 			{
+				name: 'Preview',
+				icon: 'square-check',
+				nodeClass: PreviewEditor
+			},
+			{
 				name: 'Timer',
 				icon: 'clock',
 				nodeClass: TimerEditor
@@ -258,13 +276,15 @@ export const ClassLib = {
 	BlendEditor,
 	NormalMapEditor,
 	UVEditor,
+	MatcapUVEditor,
 	PositionEditor,
 	NormalEditor,
 	TimerEditor,
 	OscillatorEditor,
 	SplitEditor,
 	JoinEditor,
-	CheckerEditor
+	CheckerEditor,
+	FileURLEditor
 };
 
 export class NodeEditor extends EventDispatcher {
@@ -521,6 +541,7 @@ export class NodeEditor extends EventDispatcher {
 		addExample( basicContext, 'Animate UV' );
 		addExample( basicContext, 'Fake top light' );
 		addExample( basicContext, 'Oscillator color' );
+		addExample( basicContext, 'Matcap' );
 
 		addExample( advancedContext, 'Rim' );
 

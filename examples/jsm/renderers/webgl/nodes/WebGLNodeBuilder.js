@@ -1,12 +1,14 @@
-import NodeBuilder from '../../nodes/core/NodeBuilder.js';
+import NodeBuilder, { defaultShaderStages } from 'three-nodes/core/NodeBuilder.js';
+import NodeFrame from 'three-nodes/core/NodeFrame.js';
 import SlotNode from './SlotNode.js';
-import GLSLNodeParser from '../../nodes/parsers/GLSLNodeParser.js';
+import GLSLNodeParser from 'three-nodes/parsers/GLSLNodeParser.js';
 import WebGLPhysicalContextNode from './WebGLPhysicalContextNode.js';
 
-import { ShaderChunk, ShaderLib, UniformsUtils, UniformsLib,
-		LinearEncoding, RGBAFormat, UnsignedByteType, sRGBEncoding } from 'three';
+import { PerspectiveCamera, ShaderChunk, ShaderLib, UniformsUtils, UniformsLib,
+	LinearEncoding, RGBAFormat, UnsignedByteType, sRGBEncoding } from 'three';
 
-const shaderStages = [ 'vertex', 'fragment' ];
+const nodeFrame = new NodeFrame();
+nodeFrame.camera = new PerspectiveCamera();
 
 const nodeShaderLib = {
 	LineBasicNodeMaterial: ShaderLib.basic,
@@ -63,9 +65,14 @@ class WebGLNodeBuilder extends NodeBuilder {
 	_parseObject() {
 
 		const material = this.material;
-		const type = material.type;
+		let type = material.type;
 
 		// shader lib
+
+		if ( material.isMeshStandardNodeMaterial ) type = 'MeshStandardNodeMaterial';
+		else if ( material.isMeshBasicNodeMaterial ) type = 'MeshBasicNodeMaterial';
+		else if ( material.isPointsNodeMaterial ) type = 'PointsNodeMaterial';
+		else if ( material.isLineBasicNodeMaterial ) type = 'LineBasicNodeMaterial';
 
 		if ( nodeShaderLib[ type ] !== undefined ) {
 
@@ -75,6 +82,12 @@ class WebGLNodeBuilder extends NodeBuilder {
 			shader.vertexShader = shaderLib.vertexShader;
 			shader.fragmentShader = shaderLib.fragmentShader;
 			shader.uniforms = UniformsUtils.merge( [ shaderLib.uniforms, UniformsLib.lights ] );
+
+		}
+
+		if ( material.isMeshStandardNodeMaterial !== true ) {
+
+			this.replaceCode( 'fragment', getIncludeSnippet( 'tonemapping_fragment' ), '' );
 
 		}
 
@@ -152,33 +165,31 @@ class WebGLNodeBuilder extends NodeBuilder {
 
 	}
 
-	getTexture( textureProperty, uvSnippet, biasSnippet = null ) {
+	getTexture( textureProperty, uvSnippet ) {
 
-		if ( biasSnippet !== null ) {
-
-			return `texture2D( ${textureProperty}, ${uvSnippet}, ${biasSnippet} )`;
-
-		} else {
-
-			return `texture2D( ${textureProperty}, ${uvSnippet} )`;
-
-		}
+		return `texture2D( ${textureProperty}, ${uvSnippet} )`;
 
 	}
 
-	getCubeTexture( textureProperty, uvSnippet, biasSnippet = null ) {
+	getTextureBias( textureProperty, uvSnippet, biasSnippet ) {
 
-		const textureCube = 'textureCubeLodEXT'; // textureCubeLodEXT textureLod
+		if ( this.material.extensions !== undefined ) this.material.extensions.shaderTextureLOD = true;
 
-		if ( biasSnippet !== null ) {
+		return `textureLod( ${textureProperty}, ${uvSnippet}, ${biasSnippet} )`;
 
-			return `${textureCube}( ${textureProperty}, ${uvSnippet}, ${biasSnippet} )`;
+	}
 
-		} else {
+	getCubeTexture( textureProperty, uvSnippet ) {
 
-			return `${textureCube}( ${textureProperty}, ${uvSnippet} )`;
+		return `textureCube( ${textureProperty}, ${uvSnippet} )`;
 
-		}
+	}
+
+	getCubeTextureBias( textureProperty, uvSnippet, biasSnippet ) {
+
+		if ( this.material.extensions !== undefined ) this.material.extensions.shaderTextureLOD = true;
+
+		return `textureLod( ${textureProperty}, ${uvSnippet}, ${biasSnippet} )`;
 
 	}
 
@@ -320,11 +331,17 @@ class WebGLNodeBuilder extends NodeBuilder {
 
 	}
 
+	getFrontFacing() {
+
+		return 'gl_FrontFacing';
+
+	}
+
 	buildCode() {
 
 		const shaderData = {};
 
-		for ( const shaderStage of shaderStages ) {
+		for ( const shaderStage of defaultShaderStages ) {
 
 			const uniforms = this.getUniforms( shaderStage );
 			const attributes = this.getAttributes( shaderStage );
@@ -360,7 +377,6 @@ ${this.shader[ getShaderStageProperty( shaderStage ) ]}
 		this.vertexShader = shaderData.vertex;
 		this.fragmentShader = shaderData.fragment;
 
-
 	}
 
 	build() {
@@ -369,6 +385,8 @@ ${this.shader[ getShaderStageProperty( shaderStage ) ]}
 
 		this._addSnippets();
 		this._addUniforms();
+
+		this._updateUniforms();
 
 		this.shader.vertexShader = this.vertexShader;
 		this.shader.fragmentShader = this.fragmentShader;
@@ -509,7 +527,7 @@ ${this.shader[ getShaderStageProperty( shaderStage ) ]}
 
 		}
 
-		for ( const shaderStage of shaderStages ) {
+		for ( const shaderStage of defaultShaderStages ) {
 
 			this.addCodeAfterSnippet(
 				shaderStage,
@@ -523,7 +541,7 @@ ${this.shader[ getShaderStageProperty( shaderStage ) ]}
 
 	_addUniforms() {
 
-		for ( const shaderStage of shaderStages ) {
+		for ( const shaderStage of defaultShaderStages ) {
 
 			// uniforms
 
@@ -532,6 +550,19 @@ ${this.shader[ getShaderStageProperty( shaderStage ) ]}
 				this.shader.uniforms[ uniform.name ] = uniform;
 
 			}
+
+		}
+
+	}
+
+	_updateUniforms() {
+
+		nodeFrame.object = this.object;
+		nodeFrame.renderer = this.renderer;
+
+		for ( const node of this.updateNodes ) {
+
+			nodeFrame.updateNode( node );
 
 		}
 

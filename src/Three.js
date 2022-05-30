@@ -1,5 +1,7 @@
 import { REVISION } from './constants.js';
 
+export { WebGLArrayRenderTarget } from './renderers/WebGLArrayRenderTarget.js';
+export { WebGL3DRenderTarget } from './renderers/WebGL3DRenderTarget.js';
 export { WebGLMultipleRenderTargets } from './renderers/WebGLMultipleRenderTargets.js';
 export { WebGLCubeRenderTarget } from './renderers/WebGLCubeRenderTarget.js';
 export { WebGLRenderTarget } from './renderers/WebGLRenderTarget.js';
@@ -26,9 +28,10 @@ export { Points } from './objects/Points.js';
 export { Group } from './objects/Group.js';
 export { VideoTexture } from './textures/VideoTexture.js';
 export { FramebufferTexture } from './textures/FramebufferTexture.js';
+export { Source } from './textures/Source.js';
 export { DataTexture } from './textures/DataTexture.js';
-export { DataTexture2DArray } from './textures/DataTexture2DArray.js';
-export { DataTexture3D } from './textures/DataTexture3D.js';
+export { DataArrayTexture } from './textures/DataArrayTexture.js';
+export { Data3DTexture } from './textures/Data3DTexture.js';
 export { CompressedTexture } from './textures/CompressedTexture.js';
 export { CubeTexture } from './textures/CubeTexture.js';
 export { CanvasTexture } from './textures/CanvasTexture.js';
@@ -124,6 +127,7 @@ export { Vector3 } from './math/Vector3.js';
 export { Vector2 } from './math/Vector2.js';
 export { Quaternion } from './math/Quaternion.js';
 export { Color } from './math/Color.js';
+export { ColorManagement } from './math/ColorManagement.js';
 export { SphericalHarmonics3 } from './math/SphericalHarmonics3.js';
 export { SpotLightHelper } from './helpers/SpotLightHelper.js';
 export { SkeletonHelper } from './helpers/SkeletonHelper.js';

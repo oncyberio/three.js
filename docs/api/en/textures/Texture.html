@@ -38,6 +38,11 @@
 		Readonly - unique number for this texture instance.
 		</p>
 
+		<h3>[property:Boolean isTexture]</h3>
+		<p>
+			Read-only flag to check if a given object is of type [name].
+		</p>
+
 		<h3>[property:String uuid]</h3>
 		<p>
 		[link:http://en.wikipedia.org/wiki/Universally_unique_identifier UUID] of this object instance.
@@ -111,7 +116,7 @@
 		<p>
 		The number of samples taken along the axis through the pixel that has the highest density of texels.
 		By default, this value is 1. A higher value gives a less blurry result than a basic mipmap,
-		at the cost of more texture samples being used. Use [page:WebGLRenderer.getMaxAnisotropy renderer.getMaxAnisotropy]() to
+		at the cost of more texture samples being used. Use [page:WebGLRenderer.capabilities renderer.capabilities.getMaxAnisotropy]() to
 		find the maximum valid anisotropy value for the GPU; this value is usually a power of 2.
 		</p>
 
@@ -276,7 +281,7 @@
 
 		<h2>Methods</h2>
 
-		<h3>[page:EventDispatcher EventDispatcher] methods are available on this class.</h3>
+		<p>[page:EventDispatcher EventDispatcher] methods are available on this class.</p>
 
 		<h3>[method:undefined updateMatrix]()</h3>
 		<p>

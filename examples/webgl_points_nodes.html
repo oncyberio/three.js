@@ -19,7 +19,8 @@
 		<script type="importmap">
 			{
 				"imports": {
-					"three": "../build/three.module.js"
+					"three": "../build/three.module.js",
+					"three-nodes/": "./jsm/nodes/"
 				}
 			}
 		</script>
@@ -27,6 +28,7 @@
 		<script type="module">
 
 			import * as THREE from 'three';
+			import * as Nodes from './jsm/nodes/Nodes.js';
 
 			import Stats from './jsm/libs/stats.module.js';
 
@@ -37,8 +39,6 @@
 			import { OrbitControls } from './jsm/controls/OrbitControls.js';
 
 			import { nodeFrame } from './jsm/renderers/webgl/nodes/WebGLNodes.js';
-
-			import * as Nodes from './jsm/renderers/nodes/Nodes.js';
 
 			let camera, scene, renderer, stats;
 
@@ -102,7 +102,7 @@
 
 				const time = new Nodes.TimerNode();
 
-				const spriteSheetCount = new Nodes.Vector2Node( new THREE.Vector2( 6, 6 ) ).setConst( true );
+				const spriteSheetCount = new Nodes.ConstNode( new THREE.Vector2( 6, 6 ) );
 
 				const fireUV = new Nodes.SpriteSheetUVNode(
 					spriteSheetCount, // count
@@ -113,7 +113,7 @@
 				const fireSprite = new Nodes.TextureNode( fireMap, fireUV );
 				const fire = new Nodes.OperatorNode( '*', fireSprite, particleIntensity );
 
-				const lerpPosition = new Nodes.FloatNode( 0 );
+				const lerpPosition = new Nodes.UniformNode( 0 );
 
 				const positionNode = new Nodes.MathNode( Nodes.MathNode.MIX, new Nodes.PositionNode( Nodes.PositionNode.LOCAL ), targetPosition, lerpPosition );
 

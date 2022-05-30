@@ -85,7 +85,7 @@ export default /* glsl */`
 
 		float faceSize = exp2( mipInt );
 
-		vec2 uv = getUV( direction, face ) * ( faceSize - 1.0 ) + 0.5;
+		vec2 uv = getUV( direction, face ) * ( faceSize - 2.0 ) + 1.0;
 
 		if ( face > 2.0 ) {
 
@@ -104,7 +104,15 @@ export default /* glsl */`
 		uv.x *= CUBEUV_TEXEL_WIDTH;
 		uv.y *= CUBEUV_TEXEL_HEIGHT;
 
-		return texture2D( envMap, uv ).rgb;
+		#ifdef texture2DGradEXT
+
+			return texture2DGradEXT( envMap, uv, vec2( 0.0 ), vec2( 0.0 ) ).rgb; // disable anisotropic filtering
+
+		#else
+
+			return texture2D( envMap, uv ).rgb;
+
+		#endif
 
 	}
 

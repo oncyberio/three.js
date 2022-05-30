@@ -119,6 +119,12 @@ class GLTFLoader extends Loader {
 
 		this.register( function ( parser ) {
 
+			return new GLTFMaterialsEmissiveStrengthExtension( parser );
+
+		} );
+
+		this.register( function ( parser ) {
+
 			return new GLTFMaterialsSpecularExtension( parser );
 
 		} );
@@ -453,6 +459,7 @@ const EXTENSIONS = {
 	KHR_TEXTURE_BASISU: 'KHR_texture_basisu',
 	KHR_TEXTURE_TRANSFORM: 'KHR_texture_transform',
 	KHR_MESH_QUANTIZATION: 'KHR_mesh_quantization',
+	KHR_MATERIALS_EMISSIVE_STRENGTH: 'KHR_materials_emissive_strength',
 	EXT_TEXTURE_WEBP: 'EXT_texture_webp',
 	EXT_MESHOPT_COMPRESSION: 'EXT_meshopt_compression'
 };
@@ -626,13 +633,52 @@ class GLTFMaterialsUnlitExtension {
 
 			if ( metallicRoughness.baseColorTexture !== undefined ) {
 
-				pending.push( parser.assignTexture( materialParams, 'map', metallicRoughness.baseColorTexture ) );
+				pending.push( parser.assignTexture( materialParams, 'map', metallicRoughness.baseColorTexture, sRGBEncoding ) );
 
 			}
 
 		}
 
 		return Promise.all( pending );
+
+	}
+
+}
+
+/**
+ * Materials Emissive Strength Extension
+ *
+ * Specification: https://github.com/KhronosGroup/glTF/blob/5768b3ce0ef32bc39cdf1bef10b948586635ead3/extensions/2.0/Khronos/KHR_materials_emissive_strength/README.md
+ */
+class GLTFMaterialsEmissiveStrengthExtension {
+
+	constructor( parser ) {
+
+		this.parser = parser;
+		this.name = EXTENSIONS.KHR_MATERIALS_EMISSIVE_STRENGTH;
+
+	}
+
+	extendMaterialParams( materialIndex, materialParams ) {
+
+		const parser = this.parser;
+		const materialDef = parser.json.materials[ materialIndex ];
+
+		if ( ! materialDef.extensions || ! materialDef.extensions[ this.name ] ) {
+
+			return Promise.resolve();
+
+		}
+
+		const emissiveStrength = materialDef.extensions[ this.name ].emissiveStrength;
+
+		if ( emissiveStrength !== undefined ) {
+
+			materialParams.emissiveIntensity = emissiveStrength;
+
+		}
+
+		return Promise.resolve();
 
 	}
 
@@ -780,7 +826,7 @@ class GLTFMaterialsSheenExtension {
 
 		if ( extension.sheenColorTexture !== undefined ) {
 
-			pending.push( parser.assignTexture( materialParams, 'sheenColorMap', extension.sheenColorTexture ) );
+			pending.push( parser.assignTexture( materialParams, 'sheenColorMap', extension.sheenColorTexture, sRGBEncoding ) );
 
 		}
 
@@ -1013,11 +1059,7 @@ class GLTFMaterialsSpecularExtension {
 
 		if ( extension.specularColorTexture !== undefined ) {
 
-			pending.push( parser.assignTexture( materialParams, 'specularColorMap', extension.specularColorTexture ).then( function ( texture ) {
-
-				texture.encoding = sRGBEncoding;
-
-			} ) );
+			pending.push( parser.assignTexture( materialParams, 'specularColorMap', extension.specularColorTexture, sRGBEncoding ) );
 
 		}
 
@@ -1120,7 +1162,7 @@ class GLTFTextureWebPExtension {
 
 		return this.detectSupport().then( function ( isSupported ) {
 
-			if ( isSupported ) return parser.loadTextureImage( textureIndex, source, loader );
+			if ( isSupported ) return parser.loadTextureImage( textureIndex, extension.source, loader );
 
 			if ( json.extensionsRequired && json.extensionsRequired.indexOf( name ) >= 0 ) {
 
@@ -1664,8 +1706,7 @@ class GLTFMaterialsPbrSpecularGlossinessExtension {
 			'glossiness',
 			'alphaMap',
 			'envMap',
-			'envMapIntensity',
-			'refractionRatio',
+			'envMapIntensity'
 		];
 
 	}
@@ -1696,7 +1737,7 @@ class GLTFMaterialsPbrSpecularGlossinessExtension {
 
 		if ( pbrSpecularGlossiness.diffuseTexture !== undefined ) {
 
-			pending.push( parser.assignTexture( materialParams, 'map', pbrSpecularGlossiness.diffuseTexture ) );
+			pending.push( parser.assignTexture( materialParams, 'map', pbrSpecularGlossiness.diffuseTexture, sRGBEncoding ) );
 
 		}
 
@@ -1714,7 +1755,7 @@ class GLTFMaterialsPbrSpecularGlossinessExtension {
 
 			const specGlossMapDef = pbrSpecularGlossiness.specularGlossinessTexture;
 			pending.push( parser.assignTexture( materialParams, 'glossinessMap', specGlossMapDef ) );
-			pending.push( parser.assignTexture( materialParams, 'specularMap', specGlossMapDef ) );
+			pending.push( parser.assignTexture( materialParams, 'specularMap', specGlossMapDef, sRGBEncoding ) );
 
 		}
 
@@ -1738,7 +1779,7 @@ class GLTFMaterialsPbrSpecularGlossinessExtension {
 		material.aoMapIntensity = 1.0;
 
 		material.emissive = materialParams.emissive;
-		material.emissiveIntensity = 1.0;
+		material.emissiveIntensity = materialParams.emissiveIntensity === undefined ? 1.0 : materialParams.emissiveIntensity;
 		material.emissiveMap = materialParams.emissiveMap === undefined ? null : materialParams.emissiveMap;
 
 		material.bumpMap = materialParams.bumpMap === undefined ? null : materialParams.bumpMap;
@@ -1763,8 +1804,6 @@ class GLTFMaterialsPbrSpecularGlossinessExtension {
 
 		material.envMap = materialParams.envMap === undefined ? null : materialParams.envMap;
 		material.envMapIntensity = 1.0;
-
-		material.refractionRatio = 0.98;
 
 		return material;
 
@@ -2051,6 +2090,7 @@ function addMorphTargets( geometry, targets, parser ) {
 
 	let hasMorphPosition = false;
 	let hasMorphNormal = false;
+	let hasMorphColor = false;
 
 	for ( let i = 0, il = targets.length; i < il; i ++ ) {
 
@@ -2058,15 +2098,17 @@ function addMorphTargets( geometry, targets, parser ) {
 
 		if ( target.POSITION !== undefined ) hasMorphPosition = true;
 		if ( target.NORMAL !== undefined ) hasMorphNormal = true;
+		if ( target.COLOR_0 !== undefined ) hasMorphColor = true;
 
-		if ( hasMorphPosition && hasMorphNormal ) break;
+		if ( hasMorphPosition && hasMorphNormal && hasMorphColor ) break;
 
 	}
 
-	if ( ! hasMorphPosition && ! hasMorphNormal ) return Promise.resolve( geometry );
+	if ( ! hasMorphPosition && ! hasMorphNormal && ! hasMorphColor ) return Promise.resolve( geometry );
 
 	const pendingPositionAccessors = [];
 	const pendingNormalAccessors = [];
+	const pendingColorAccessors = [];
 
 	for ( let i = 0, il = targets.length; i < il; i ++ ) {
 
@@ -2092,18 +2134,31 @@ function addMorphTargets( geometry, targets, parser ) {
 
 		}
 
+		if ( hasMorphColor ) {
+
+			const pendingAccessor = target.COLOR_0 !== undefined
+				? parser.getDependency( 'accessor', target.COLOR_0 )
+				: geometry.attributes.color;
+
+			pendingColorAccessors.push( pendingAccessor );
+
+		}
+
 	}
 
 	return Promise.all( [
 		Promise.all( pendingPositionAccessors ),
-		Promise.all( pendingNormalAccessors )
+		Promise.all( pendingNormalAccessors ),
+		Promise.all( pendingColorAccessors )
 	] ).then( function ( accessors ) {
 
 		const morphPositions = accessors[ 0 ];
 		const morphNormals = accessors[ 1 ];
+		const morphColors = accessors[ 2 ];
 
 		if ( hasMorphPosition ) geometry.morphAttributes.position = morphPositions;
 		if ( hasMorphNormal ) geometry.morphAttributes.normal = morphNormals;
+		if ( hasMorphColor ) geometry.morphAttributes.color = morphColors;
 		geometry.morphTargetsRelative = true;
 
 		return geometry;
@@ -2218,6 +2273,15 @@ function getNormalizedComponentScale( constructor ) {
 
 }
 
+function getImageURIMimeType( uri ) {
+
+	if ( uri.search( /\.jpe?g($|\?)/i ) > 0 || uri.search( /^data\:image\/jpeg/ ) === 0 ) return 'image/jpeg';
+	if ( uri.search( /\.webp($|\?)/i ) > 0 || uri.search( /^data\:image\/webp/ ) === 0 ) return 'image/webp';
+
+	return 'image/png';
+
+}
+
 /* GLTF PARSER */
 
 class GLTFParser {
@@ -2251,13 +2315,18 @@ class GLTFParser {
 
 		// Use an ImageBitmapLoader if imageBitmaps are supported. Moves much of the
 		// expensive work of uploading a texture to the GPU off the main thread.
-		if ( typeof createImageBitmap !== 'undefined' && /Firefox|^((?!chrome|android).)*safari/i.test( navigator.userAgent ) === false ) {
 
-			this.textureLoader = new ImageBitmapLoader( this.options.manager );
+		const isSafari = /^((?!chrome|android).)*safari/i.test( navigator.userAgent ) === true;
+		const isFirefox = navigator.userAgent.indexOf( 'Firefox' ) > - 1;
+		const firefoxVersion = isFirefox ? navigator.userAgent.match( /Firefox\/([0-9]+)\./ )[ 1 ] : - 1;
+
+		if ( typeof createImageBitmap === 'undefined' || isSafari || ( isFirefox && firefoxVersion < 98 ) ) {
+
+			this.textureLoader = new TextureLoader( this.options.manager );
 
 		} else {
 
-			this.textureLoader = new TextureLoader( this.options.manager );
+			this.textureLoader = new ImageBitmapLoader( this.options.manager );
 
 		}
 
@@ -2562,7 +2631,11 @@ class GLTFParser {
 					break;
 
 				case 'animation':
-					dependency = this.loadAnimation( index );
+					dependency = this._invokeOne( function ( ext ) {
+
+						return ext.loadAnimation && ext.loadAnimation( index );
+
+					} );
 					break;
 
 				case 'camera':
@@ -2879,15 +2952,7 @@ class GLTFParser {
 
 		if ( this.sourceCache[ sourceIndex ] !== undefined ) {
 
-			return this.sourceCache[ sourceIndex ].then( function ( texture ) {
-
-				return texture.clone();
-
-			} ).catch( function ( error ) {
-
-				throw error;
-
-			} );
+			return this.sourceCache[ sourceIndex ].then( ( texture ) => texture.clone() );
 
 		}
 
@@ -2950,6 +3015,8 @@ class GLTFParser {
 
 			}
 
+			texture.userData.mimeType = sourceDef.mimeType || getImageURIMimeType( sourceDef.uri );
+
 			return texture;
 
 		} ).catch( function ( error ) {
@@ -2971,7 +3038,7 @@ class GLTFParser {
 	 * @param {Object} mapDef
 	 * @return {Promise<Texture>}
 	 */
-	assignTexture( materialParams, mapName, mapDef ) {
+	assignTexture( materialParams, mapName, mapDef, encoding ) {
 
 		const parser = this;
 
@@ -2996,6 +3063,12 @@ class GLTFParser {
 					parser.associations.set( texture, gltfReference );
 
 				}
+
+			}
+
+			if ( encoding !== undefined ) {
+
+				texture.encoding = encoding;
 
 			}
 
@@ -3170,7 +3243,7 @@ class GLTFParser {
 
 			if ( metallicRoughness.baseColorTexture !== undefined ) {
 
-				pending.push( parser.assignTexture( materialParams, 'map', metallicRoughness.baseColorTexture ) );
+				pending.push( parser.assignTexture( materialParams, 'map', metallicRoughness.baseColorTexture, sRGBEncoding ) );
 
 			}
 
@@ -3261,7 +3334,7 @@ class GLTFParser {
 
 		if ( materialDef.emissiveTexture !== undefined && materialType !== MeshBasicMaterial ) {
 
-			pending.push( parser.assignTexture( materialParams, 'emissiveMap', materialDef.emissiveTexture ) );
+			pending.push( parser.assignTexture( materialParams, 'emissiveMap', materialDef.emissiveTexture, sRGBEncoding ) );
 
 		}
 
@@ -3280,10 +3353,6 @@ class GLTFParser {
 			}
 
 			if ( materialDef.name ) material.name = materialDef.name;
-
-			// baseColorTexture, emissiveTexture, and specularGlossinessTexture use sRGB encoding.
-			if ( material.map ) material.map.encoding = sRGBEncoding;
-			if ( material.emissiveMap ) material.emissiveMap.encoding = sRGBEncoding;
 
 			assignExtrasToUserData( material, materialDef );
 

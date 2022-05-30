@@ -17,8 +17,6 @@ class Material extends EventDispatcher {
 		this.name = '';
 		this.type = 'Material';
 
-		this.fog = true;
-
 		this.blending = NormalBlending;
 		this.side = FrontSide;
 		this.vertexColors = false;
@@ -122,7 +120,7 @@ class Material extends EventDispatcher {
 
 			}
 
-			// for backward compatability if shading is set in the constructor
+			// for backward compatibility if shading is set in the constructor
 			if ( key === 'shading' ) {
 
 				console.warn( 'THREE.' + this.type + ': .shading has been removed. Use the boolean .flatShading instead.' );
@@ -350,6 +348,8 @@ class Material extends EventDispatcher {
 
 		if ( this.toneMapped === false ) data.toneMapped = false;
 
+		if ( this.fog === false ) data.fog = false;
+
 		if ( JSON.stringify( this.userData ) !== '{}' ) data.userData = this.userData;
 
 		// TODO: Copied from Object3D.toJSON
@@ -393,8 +393,6 @@ class Material extends EventDispatcher {
 	copy( source ) {
 
 		this.name = source.name;
-
-		this.fog = source.fog;
 
 		this.blending = source.blending;
 		this.side = source.side;
@@ -478,6 +476,21 @@ class Material extends EventDispatcher {
 	set needsUpdate( value ) {
 
 		if ( value === true ) this.version ++;
+
+	}
+
+	// @deprecated since r131, f5803c62cc4a29d90744e9dc7811d086e354c1d8
+
+	get vertexTangents() {
+
+		console.warn( 'THREE.' + this.type + ': .vertexTangents has been removed.' );
+		return false;
+
+	}
+
+	set vertexTangents( value ) {
+
+		console.warn( 'THREE.' + this.type + ': .vertexTangents has been removed.' );
 
 	}
 

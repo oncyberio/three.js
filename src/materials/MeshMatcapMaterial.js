@@ -3,32 +3,6 @@ import { Material } from './Material.js';
 import { Vector2 } from '../math/Vector2.js';
 import { Color } from '../math/Color.js';
 
-/**
- * parameters = {
- *  color: <hex>,
- *  opacity: <float>,
- *
- *  matcap: new THREE.Texture( <Image> ),
- *
- *  map: new THREE.Texture( <Image> ),
- *
- *  bumpMap: new THREE.Texture( <Image> ),
- *  bumpScale: <float>,
- *
- *  normalMap: new THREE.Texture( <Image> ),
- *  normalMapType: THREE.TangentSpaceNormalMap,
- *  normalScale: <Vector2>,
- *
- *  displacementMap: new THREE.Texture( <Image> ),
- *  displacementScale: <float>,
- *  displacementBias: <float>,
- *
- *  alphaMap: new THREE.Texture( <Image> ),
- *
- *  flatShading: <bool>
- * }
- */
-
 class MeshMatcapMaterial extends Material {
 
 	constructor( parameters ) {
@@ -59,6 +33,8 @@ class MeshMatcapMaterial extends Material {
 		this.alphaMap = null;
 
 		this.flatShading = false;
+
+		this.fog = true;
 
 		this.setValues( parameters );
 
@@ -91,6 +67,8 @@ class MeshMatcapMaterial extends Material {
 		this.alphaMap = source.alphaMap;
 
 		this.flatShading = source.flatShading;
+
+		this.fog = source.fog;
 
 		return this;
 

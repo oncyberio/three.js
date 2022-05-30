@@ -5,7 +5,6 @@ import {
 	EquirectangularReflectionMapping,
 	EquirectangularRefractionMapping,
 	CubeUVReflectionMapping,
-	CubeUVRefractionMapping,
 
 	RepeatWrapping,
 	ClampToEdgeWrapping,
@@ -169,7 +168,7 @@ class ObjectLoader extends Loader {
 
 			for ( const uuid in images ) {
 
-				if ( images[ uuid ] instanceof HTMLImageElement ) {
+				if ( images[ uuid ].data instanceof HTMLImageElement ) {
 
 					hasImages = true;
 					break;
@@ -1103,8 +1102,7 @@ const TEXTURE_MAPPING = {
 	CubeRefractionMapping: CubeRefractionMapping,
 	EquirectangularReflectionMapping: EquirectangularReflectionMapping,
 	EquirectangularRefractionMapping: EquirectangularRefractionMapping,
-	CubeUVReflectionMapping: CubeUVReflectionMapping,
-	CubeUVRefractionMapping: CubeUVRefractionMapping
+	CubeUVReflectionMapping: CubeUVReflectionMapping
 };
 
 const TEXTURE_WRAPPING = {

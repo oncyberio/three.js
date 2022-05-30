@@ -1,10 +1,10 @@
-import { UIRow, UIButton } from './libs/ui.js';
+import { UIDiv, UIButton } from './libs/ui.js';
 
 function SidebarGeometryModifiers( editor, object ) {
 
 	const signals = editor.signals;
 
-	const container = new UIRow().setPaddingLeft( '90px' );
+	const container = new UIDiv().setPaddingLeft( '90px' );
 
 	const geometry = object.geometry;
 

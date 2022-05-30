@@ -2,6 +2,7 @@ import { EventDispatcher } from '../core/EventDispatcher.js';
 import { Texture } from '../textures/Texture.js';
 import { LinearFilter } from '../constants.js';
 import { Vector4 } from '../math/Vector4.js';
+import { Source } from '../textures/Source.js';
 
 /*
  In options, we can specify:
@@ -28,6 +29,7 @@ class WebGLRenderTarget extends EventDispatcher {
 		this.texture = new Texture( image, options.mapping, options.wrapS, options.wrapT, options.magFilter, options.minFilter, options.format, options.type, options.anisotropy, options.encoding );
 		this.texture.isRenderTargetTexture = true;
 
+		this.texture.flipY = false;
 		this.texture.generateMipmaps = options.generateMipmaps !== undefined ? options.generateMipmaps : false;
 		this.texture.internalFormat = options.internalFormat !== undefined ? options.internalFormat : null;
 		this.texture.minFilter = options.minFilter !== undefined ? options.minFilter : LinearFilter;
@@ -38,18 +40,6 @@ class WebGLRenderTarget extends EventDispatcher {
 		this.depthTexture = options.depthTexture !== undefined ? options.depthTexture : null;
 
 		this.samples = options.samples !== undefined ? options.samples : 0;
-
-	}
-
-	setTexture( texture ) {
-
-		texture.image = {
-			width: this.width,
-			height: this.height,
-			depth: this.depth
-		};
-
-		this.texture = texture;
 
 	}
 
@@ -89,10 +79,12 @@ class WebGLRenderTarget extends EventDispatcher {
 		this.viewport.copy( source.viewport );
 
 		this.texture = source.texture.clone();
+		this.texture.isRenderTargetTexture = true;
 
 		// ensure image object is not shared, see #20328
 
-		this.texture.image = Object.assign( {}, source.texture.image );
+		const image = Object.assign( {}, source.texture.image );
+		this.texture.source = new Source( image );
 
 		this.depthBuffer = source.depthBuffer;
 		this.stencilBuffer = source.stencilBuffer;
