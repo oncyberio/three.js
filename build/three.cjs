@@ -10036,7 +10036,7 @@ var shadowmask_pars_fragment = "float getShadowMask() {\n\tfloat shadow = 1.0;\n
 
 var skinbase_vertex = "#ifdef USE_SKINNING\n\tmat4 boneMatX = getBoneMatrix( skinIndex.x );\n\tmat4 boneMatY = getBoneMatrix( skinIndex.y );\n\tmat4 boneMatZ = getBoneMatrix( skinIndex.z );\n\tmat4 boneMatW = getBoneMatrix( skinIndex.w );\n#endif";
 
-var skinning_pars_vertex = "#ifdef USE_SKINNING\n\tuniform mat4 bindMatrix;\n\tuniform mat4 bindMatrixInverse;\n\tuniform highp sampler2D boneTexture;\n\tuniform int boneTextureSize;\n\tmat4 getBoneMatrix( const in float i ) {\n\t\tfloat j = i * 4.0;\n\t\tfloat x = mod( j, float( boneTextureSize ) );\n\t\tfloat y = floor( j / float( boneTextureSize ) );\n\t\tfloat dx = 1.0 / float( boneTextureSize );\n\t\tfloat dy = 1.0 / float( boneTextureSize );\n\t\ty = dy * ( y + 0.5 );\n\t\tvec4 v1 = texture2D( boneTexture, vec2( dx * ( x + 0.5 ), y ) );\n\t\tvec4 v2 = texture2D( boneTexture, vec2( dx * ( x + 1.5 ), y ) );\n\t\tvec4 v3 = texture2D( boneTexture, vec2( dx * ( x + 2.5 ), y ) );\n\t\tvec4 v4 = texture2D( boneTexture, vec2( dx * ( x + 3.5 ), y ) );\n\t\tmat4 bone = mat4( v1, v2, v3, v4 );\n\t\treturn bone;\n\t}\n#endif";
+var skinning_pars_vertex = "#ifdef USE_SKINNING\n\tuniform mat4 bindMatrix;\n\tuniform mat4 bindMatrixInverse;\n\t\tuniform highp sampler2D boneTexture;\n\t\tuniform int boneTextureSize;\n\t\tmat4 getBoneMatrix( const in float i ) {\n\t\t#ifdef USE_INSTANCING\n\t\t\t\n\t\t\tint j = 4 * int(i);\n\t\t\tvec4 v1 = texture2D(boneTexture, vec2( j, gl_InstanceID ), 0);\n\t\t\tvec4 v2 = texture2D(boneTexture, vec2( j + 1, gl_InstanceID ), 0);\n\t\t\tvec4 v3 = texture2D(boneTexture, vec2( j + 2, gl_InstanceID ), 0);\n\t\t\tvec4 v4 = texture2D(boneTexture, vec2( j + 3, gl_InstanceID ), 0);\n\t\t\t\n\t\t#else\n\t\t\tfloat j = i * 4.0;\n\t\t\tfloat x = mod( j, float( boneTextureSize ) );\n\t\t\tfloat y = floor( j / float( boneTextureSize ) );\n\t\t\tfloat dx = 1.0 / float( boneTextureSize );\n\t\t\tfloat dy = 1.0 / float( boneTextureSize );\n\t\t\ty = dy * ( y + 0.5 );\n\t\t\tvec4 v1 = texture2D( boneTexture, vec2( dx * ( x + 0.5 ), y ) );\n\t\t\tvec4 v2 = texture2D( boneTexture, vec2( dx * ( x + 1.5 ), y ) );\n\t\t\tvec4 v3 = texture2D( boneTexture, vec2( dx * ( x + 2.5 ), y ) );\n\t\t\tvec4 v4 = texture2D( boneTexture, vec2( dx * ( x + 3.5 ), y ) );\n\t\t#endif\n\t\t\n\t\t\tmat4 bone = mat4( v1, v2, v3, v4 );\n\t\t\treturn bone;\n\t\t}\n#endif";
 
 var skinning_vertex = "#ifdef USE_SKINNING\n\tvec4 skinVertex = bindMatrix * vec4( transformed, 1.0 );\n\tvec4 skinned = vec4( 0.0 );\n\tskinned += boneMatX * skinVertex * skinWeight.x;\n\tskinned += boneMatY * skinVertex * skinWeight.y;\n\tskinned += boneMatZ * skinVertex * skinWeight.z;\n\tskinned += boneMatW * skinVertex * skinWeight.w;\n\ttransformed = ( bindMatrixInverse * skinned ).xyz;\n#endif";
 
@@ -20277,7 +20277,14 @@ function WebGLRenderer(parameters = {}) {
 
 			if (skeleton) {
 				if (capabilities.floatVertexTextures) {
-					if (skeleton.boneTexture === null) skeleton.computeBoneTexture();
+					if (skeleton.boneTexture === null) {
+						if (object.isInstancedMesh) {
+							skeleton.computeInstancedBoneTexture(object.instanceBones, object.count);
+						} else {
+							skeleton.computeBoneTexture();
+						}
+					}
+
 					p_uniforms.setValue(_gl, 'boneTexture', skeleton.boneTexture, textures);
 					p_uniforms.setValue(_gl, 'boneTextureSize', skeleton.boneTextureSize);
 				} else {
@@ -21449,6 +21456,143 @@ class SkinnedMesh extends Mesh {
 
 SkinnedMesh.prototype.isSkinnedMesh = true;
 
+class InstancedBufferAttribute extends BufferAttribute {
+	constructor(array, itemSize, normalized, meshPerAttribute = 1) {
+		if (typeof normalized === 'number') {
+			meshPerAttribute = normalized;
+			normalized = false;
+			console.error('THREE.InstancedBufferAttribute: The constructor now expects normalized as the third argument.');
+		}
+
+		super(array, itemSize, normalized);
+		this.meshPerAttribute = meshPerAttribute;
+	}
+
+	copy(source) {
+		super.copy(source);
+		this.meshPerAttribute = source.meshPerAttribute;
+		return this;
+	}
+
+	toJSON() {
+		const data = super.toJSON();
+		data.meshPerAttribute = this.meshPerAttribute;
+		data.isInstancedBufferAttribute = true;
+		return data;
+	}
+
+}
+
+InstancedBufferAttribute.prototype.isInstancedBufferAttribute = true;
+
+const _instanceLocalMatrix$1 = /*@__PURE__*/new Matrix4();
+
+const _instanceWorldMatrix$1 = /*@__PURE__*/new Matrix4();
+
+const _instanceIntersects$1 = [];
+
+class InstancedSkinnedMesh extends SkinnedMesh {
+	constructor(geometry, material, count) {
+		super(geometry, material);
+		this.instanceMatrix = new InstancedBufferAttribute(new Float32Array(count * 16), 16);
+		this.instanceColor = null;
+		this.instanceBones = null;
+		this.count = count;
+		this.frustumCulled = false;
+		this._mesh = null;
+	}
+
+	copy(source) {
+		super.copy(source);
+
+		if (source.isInstancedMesh) {
+			this.instanceMatrix.copy(source.instanceMatrix);
+			if (source.instanceColor !== null) this.instanceColor = source.instanceColor.clone();
+			this.count = source.count;
+		}
+
+		return this;
+	}
+
+	getColorAt(index, color) {
+		color.fromArray(this.instanceColor.array, index * 3);
+	}
+
+	getMatrixAt(index, matrix) {
+		matrix.fromArray(this.instanceMatrix.array, index * 16);
+	}
+
+	raycast(raycaster, intersects) {
+		const matrixWorld = this.matrixWorld;
+		const raycastTimes = this.count;
+
+		if (this._mesh === null) {
+			this._mesh = new SkinnedMesh(this.geometry, this.material);
+
+			this._mesh.copy(this);
+		}
+
+		const _mesh = this._mesh;
+		if (_mesh.material === undefined) return;
+
+		for (let instanceId = 0; instanceId < raycastTimes; instanceId++) {
+			// calculate the world matrix for each instance
+			this.getMatrixAt(instanceId, _instanceLocalMatrix$1);
+
+			_instanceWorldMatrix$1.multiplyMatrices(matrixWorld, _instanceLocalMatrix$1); // the mesh represents this single instance
+
+
+			_mesh.matrixWorld = _instanceWorldMatrix$1;
+
+			_mesh.raycast(raycaster, _instanceIntersects$1); // process the result of raycast
+
+
+			for (let i = 0, l = _instanceIntersects$1.length; i < l; i++) {
+				const intersect = _instanceIntersects$1[i];
+				intersect.instanceId = instanceId;
+				intersect.object = this;
+				intersects.push(intersect);
+			}
+
+			_instanceIntersects$1.length = 0;
+		}
+	}
+
+	setColorAt(index, color) {
+		if (this.instanceColor === null) {
+			this.instanceColor = new InstancedBufferAttribute(new Float32Array(this.instanceMatrix.count * 3), 3);
+		}
+
+		color.toArray(this.instanceColor.array, index * 3);
+	}
+
+	setMatrixAt(index, matrix) {
+		matrix.toArray(this.instanceMatrix.array, index * 16);
+	}
+
+	setBonesAt(index, skeleton) {
+		skeleton = skeleton || this.skeleton;
+		const size = skeleton.bones.length * 16;
+
+		if (this.instanceBones === null) {
+			this.instanceBones = new Float32Array(size * this.count);
+		}
+
+		skeleton.update(this.instanceBones, index);
+	}
+
+	updateMorphTargets() {}
+
+	dispose() {
+		this.dispatchEvent({
+			type: 'dispose'
+		});
+	}
+
+}
+
+InstancedSkinnedMesh.prototype.isInstancedMesh = true;
+
 class Bone extends Object3D {
 	constructor() {
 		super();
@@ -21553,11 +21697,12 @@ class Skeleton {
 		}
 	}
 
-	update() {
+	update(instanceBones, id) {
 		const bones = this.bones;
 		const boneInverses = this.boneInverses;
-		const boneMatrices = this.boneMatrices;
-		const boneTexture = this.boneTexture; // flatten bone matrices to array
+		const boneMatrices = instanceBones || this.boneMatrices;
+		const boneTexture = this.boneTexture;
+		const instanceId = id || 0; // flatten bone matrices to array
 
 		for (let i = 0, il = bones.length; i < il; i++) {
 			// compute the offset between the current and the original transform
@@ -21565,7 +21710,7 @@ class Skeleton {
 
 			_offsetMatrix.multiplyMatrices(matrix, boneInverses[i]);
 
-			_offsetMatrix.toArray(boneMatrices, i * 16);
+			_offsetMatrix.toArray(boneMatrices, 16 * (i + instanceId * bones.length));
 		}
 
 		if (boneTexture !== null) {
@@ -21593,11 +21738,14 @@ class Skeleton {
 		boneMatrices.set(this.boneMatrices); // copy current values
 
 		const boneTexture = new DataTexture(boneMatrices, size, size, RGBAFormat, FloatType);
-		boneTexture.needsUpdate = true;
 		this.boneMatrices = boneMatrices;
 		this.boneTexture = boneTexture;
 		this.boneTextureSize = size;
 		return this;
+	}
+
+	computeInstancedBoneTexture(boneMatrices, count) {
+		this.boneTexture = new DataTexture(boneMatrices, this.bones.length * 4, count, RGBAFormat, FloatType);
 	}
 
 	getBoneByName(name) {
@@ -21664,35 +21812,6 @@ class Skeleton {
 	}
 
 }
-
-class InstancedBufferAttribute extends BufferAttribute {
-	constructor(array, itemSize, normalized, meshPerAttribute = 1) {
-		if (typeof normalized === 'number') {
-			meshPerAttribute = normalized;
-			normalized = false;
-			console.error('THREE.InstancedBufferAttribute: The constructor now expects normalized as the third argument.');
-		}
-
-		super(array, itemSize, normalized);
-		this.meshPerAttribute = meshPerAttribute;
-	}
-
-	copy(source) {
-		super.copy(source);
-		this.meshPerAttribute = source.meshPerAttribute;
-		return this;
-	}
-
-	toJSON() {
-		const data = super.toJSON();
-		data.meshPerAttribute = this.meshPerAttribute;
-		data.isInstancedBufferAttribute = true;
-		return data;
-	}
-
-}
-
-InstancedBufferAttribute.prototype.isInstancedBufferAttribute = true;
 
 const _instanceLocalMatrix = /*@__PURE__*/new Matrix4();
 
@@ -35164,6 +35283,7 @@ exports.InstancedBufferAttribute = InstancedBufferAttribute;
 exports.InstancedBufferGeometry = InstancedBufferGeometry;
 exports.InstancedInterleavedBuffer = InstancedInterleavedBuffer;
 exports.InstancedMesh = InstancedMesh;
+exports.InstancedSkinnedMesh = InstancedSkinnedMesh;
 exports.Int16BufferAttribute = Int16BufferAttribute;
 exports.Int32BufferAttribute = Int32BufferAttribute;
 exports.Int8BufferAttribute = Int8BufferAttribute;

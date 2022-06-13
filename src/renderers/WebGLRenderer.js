@@ -1700,9 +1700,22 @@ function WebGLRenderer( parameters = {} ) {
 
 			if ( skeleton ) {
 
+				
 				if ( capabilities.floatVertexTextures ) {
 
-					if ( skeleton.boneTexture === null ) skeleton.computeBoneTexture();
+					if ( skeleton.boneTexture === null ) {
+
+						if ( object.isInstancedMesh ) {
+
+							skeleton.computeInstancedBoneTexture( object.instanceBones, object.count );
+
+						} else {
+
+							skeleton.computeBoneTexture();
+
+						}
+
+					}
 
 					p_uniforms.setValue( _gl, 'boneTexture', skeleton.boneTexture, textures );
 					p_uniforms.setValue( _gl, 'boneTextureSize', skeleton.boneTextureSize );
