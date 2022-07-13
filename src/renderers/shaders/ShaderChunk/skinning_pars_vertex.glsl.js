@@ -4,7 +4,6 @@ export default /* glsl */`
 	uniform mat4 bindMatrix;
 	uniform mat4 bindMatrixInverse;
 
-
 		uniform highp sampler2D boneTexture;
 		uniform int boneTextureSize;
 
@@ -13,10 +12,10 @@ export default /* glsl */`
 		#ifdef USE_INSTANCING
 			
 			int j = 4 * int(i);
-			vec4 v1 = texture2D(boneTexture, vec2( j, gl_InstanceID ), 0);
-			vec4 v2 = texture2D(boneTexture, vec2( j + 1, gl_InstanceID ), 0);
-			vec4 v3 = texture2D(boneTexture, vec2( j + 2, gl_InstanceID ), 0);
-			vec4 v4 = texture2D(boneTexture, vec2( j + 3, gl_InstanceID ), 0);
+			vec4 v1 = texelFetch(boneTexture, ivec2( j,     gl_InstanceID ), 0);
+			vec4 v2 = texelFetch(boneTexture, ivec2( j + 1, gl_InstanceID ), 0);
+			vec4 v3 = texelFetch(boneTexture, ivec2( j + 2, gl_InstanceID ), 0);
+			vec4 v4 = texelFetch(boneTexture, ivec2( j + 3, gl_InstanceID ), 0);
 			
 		#else
 
