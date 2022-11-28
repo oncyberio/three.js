@@ -11,9 +11,11 @@ import { Source } from '../textures/Source.js';
 */
 class WebGLRenderTarget extends EventDispatcher {
 
-	constructor( width, height, options = {} ) {
+	constructor( width = 1, height = 1, options = {} ) {
 
 		super();
+
+		this.isWebGLRenderTarget = true;
 
 		this.width = width;
 		this.height = height;
@@ -104,7 +106,5 @@ class WebGLRenderTarget extends EventDispatcher {
 	}
 
 }
-
-WebGLRenderTarget.prototype.isWebGLRenderTarget = true;
 
 export { WebGLRenderTarget };

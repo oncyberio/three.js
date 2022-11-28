@@ -7,13 +7,15 @@ class ComputeNode extends Node {
 
 		super( 'void' );
 
+		this.isComputeNode = true;
+
 		this.computeNode = computeNode;
 
 		this.count = count;
 		this.workgroupSize = workgroupSize;
 		this.dispatchCount = 0;
 
-		this.updateType = NodeUpdateType.Object;
+		this.updateType = NodeUpdateType.OBJECT;
 
 		this.updateDispatchCount();
 
@@ -31,6 +33,8 @@ class ComputeNode extends Node {
 		this.dispatchCount = Math.ceil( count / size );
 
 	}
+
+	onInit() { }
 
 	update( { renderer } ) {
 
@@ -57,7 +61,5 @@ class ComputeNode extends Node {
 	}
 
 }
-
-ComputeNode.prototype.isComputeNode = true;
 
 export default ComputeNode;

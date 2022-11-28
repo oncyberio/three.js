@@ -1,19 +1,22 @@
 import { BackSide } from '../../constants.js';
+import { getUnlitUniformColorSpace } from '../shaders/UniformsUtils.js';
 
 function WebGLMaterials( renderer, properties ) {
 
 	function refreshFogUniforms( uniforms, fog ) {
 
-		uniforms.fogColor.value.copy( fog.color );
+		fog.color.getRGB( uniforms.fogColor.value, getUnlitUniformColorSpace( renderer ) );
 
 		if ( fog.isFog ) {
 
 			uniforms.fogNear.value = fog.near;
 			uniforms.fogFar.value = fog.far;
+			uniforms.fogTexture.value = fog.fogTexture
 
 		} else if ( fog.isFogExp2 ) {
 
 			uniforms.fogDensity.value = fog.density;
+			uniforms.fogTexture.value = fog.fogTexture
 
 		}
 
@@ -214,10 +217,12 @@ function WebGLMaterials( renderer, properties ) {
 		// 10. clearcoat map
 		// 11. clearcoat normal map
 		// 12. clearcoat roughnessMap map
-		// 13. specular intensity map
-		// 14. specular tint map
-		// 15. transmission map
-		// 16. thickness map
+		// 13. iridescence map
+		// 14. iridescence thickness map
+		// 15. specular intensity map
+		// 16. specular tint map
+		// 17. transmission map
+		// 18. thickness map
 
 		let uvScaleMap;
 
@@ -268,6 +273,14 @@ function WebGLMaterials( renderer, properties ) {
 		} else if ( material.clearcoatRoughnessMap ) {
 
 			uvScaleMap = material.clearcoatRoughnessMap;
+
+		} else if ( material.iridescenceMap ) {
+
+			uvScaleMap = material.iridescenceMap;
+
+		} else if ( material.iridescenceThicknessMap ) {
+
+			uvScaleMap = material.iridescenceThicknessMap;
 
 		} else if ( material.specularIntensityMap ) {
 
@@ -571,6 +584,27 @@ function WebGLMaterials( renderer, properties ) {
 					uniforms.clearcoatNormalScale.value.negate();
 
 				}
+
+			}
+
+		}
+
+		if ( material.iridescence > 0 ) {
+
+			uniforms.iridescence.value = material.iridescence;
+			uniforms.iridescenceIOR.value = material.iridescenceIOR;
+			uniforms.iridescenceThicknessMinimum.value = material.iridescenceThicknessRange[ 0 ];
+			uniforms.iridescenceThicknessMaximum.value = material.iridescenceThicknessRange[ 1 ];
+
+			if ( material.iridescenceMap ) {
+
+				uniforms.iridescenceMap.value = material.iridescenceMap;
+
+			}
+
+			if ( material.iridescenceThicknessMap ) {
+
+				uniforms.iridescenceThicknessMap.value = material.iridescenceThicknessMap;
 
 			}
 

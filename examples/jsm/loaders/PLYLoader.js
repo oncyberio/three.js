@@ -31,6 +31,16 @@ import {
  *	diffuse_blue: 'blue'
  * } );
  *
+ * Custom properties outside of the defaults for position, uv, normal
+ * and color attributes can be added using the setCustomPropertyMapping method.
+ * For example, the following maps the element properties “custom_property_a”
+ * and “custom_property_b” to an attribute “customAttribute” with an item size of 2.
+ * Attribute item sizes are set from the number of element properties in the property array.
+ *
+ * loader.setCustomPropertyMapping( {
+ *	customAttribute: ['custom_property_a', 'custom_property_b'],
+ * } );
+ *
  */
 
 const _color = new Color();
@@ -42,6 +52,7 @@ class PLYLoader extends Loader {
 		super( manager );
 
 		this.propertyNameMapping = {};
+		this.customPropertyMapping = {};
 
 	}
 
@@ -86,11 +97,17 @@ class PLYLoader extends Loader {
 
 	}
 
+	setCustomPropertyNameMapping( mapping ) {
+
+		this.customPropertyMapping = mapping;
+
+	}
+
 	parse( data ) {
 
 		function parseHeader( data ) {
 
-			const patternHeader = /^ply([\s\S]*)end_header\r?\n/;
+			const patternHeader = /^ply([\s\S]*)end_header(\r\n|\r|\n)/;
 			let headerText = '';
 			let headerLength = 0;
 			const result = patternHeader.exec( data );
@@ -109,7 +126,7 @@ class PLYLoader extends Loader {
 				objInfo: ''
 			};
 
-			const lines = headerText.split( '\n' );
+			const lines = headerText.split( /\r\n|\r|\n/ );
 			let currentElement;
 
 			function make_ply_element_property( propertValues, propertyNameMapping ) {
@@ -260,18 +277,32 @@ class PLYLoader extends Loader {
 
 		}
 
+		function createBuffer() {
+
+			const buffer = {
+			  indices: [],
+			  vertices: [],
+			  normals: [],
+			  uvs: [],
+			  faceVertexUvs: [],
+			  colors: [],
+			};
+
+			for ( const customProperty of Object.keys( scope.customPropertyMapping ) ) {
+
+			  buffer[ customProperty ] = [];
+
+			}
+
+			return buffer;
+
+		}
+
 		function parseASCII( data, header ) {
 
 			// PLY ascii format specification, as per http://en.wikipedia.org/wiki/PLY_(file_format)
 
-			const buffer = {
-				indices: [],
-				vertices: [],
-				normals: [],
-				uvs: [],
-				faceVertexUvs: [],
-				colors: []
-			};
+			const buffer = createBuffer();
 
 			let result;
 
@@ -283,7 +314,7 @@ class PLYLoader extends Loader {
 
 			}
 
-			const lines = body.split( '\n' );
+			const lines = body.split( /\r\n|\r|\n/ );
 			let currentElement = 0;
 			let currentElementCount = 0;
 
@@ -357,6 +388,24 @@ class PLYLoader extends Loader {
 
 			}
 
+			// custom buffer data
+
+			for ( const customProperty of Object.keys( scope.customPropertyMapping ) ) {
+
+				if ( buffer[ customProperty ].length > 0 ) {
+
+				  	geometry.setAttribute(
+						customProperty,
+						new Float32BufferAttribute(
+					  		buffer[ customProperty ],
+					  		scope.customPropertyMapping[ customProperty ].length
+						)
+				  	);
+
+				}
+
+			}
+
 			geometry.computeBoundingSphere();
 
 			return geometry;
@@ -416,6 +465,16 @@ class PLYLoader extends Loader {
 					).convertSRGBToLinear();
 
 					buffer.colors.push( _color.r, _color.g, _color.b );
+
+				}
+
+				for ( const customProperty of Object.keys( scope.customPropertyMapping ) ) {
+
+					for ( const elementProperty of scope.customPropertyMapping[ customProperty ] ) {
+
+					  buffer[ customProperty ].push( element[ elementProperty ] );
+
+					}
 
 				}
 
@@ -506,14 +565,7 @@ class PLYLoader extends Loader {
 
 		function parseBinary( data, header ) {
 
-			const buffer = {
-				indices: [],
-				vertices: [],
-				normals: [],
-				uvs: [],
-				faceVertexUvs: [],
-				colors: []
-			};
+			const buffer = createBuffer();
 
 			const little_endian = ( header.format === 'binary_little_endian' );
 			const body = new DataView( data, header.headerLength );

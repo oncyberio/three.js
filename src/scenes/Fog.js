@@ -2,7 +2,9 @@ import { Color } from '../math/Color.js';
 
 class Fog {
 
-	constructor( color, near = 1, far = 1000 ) {
+	constructor( color, near = 1, far = 1000, texture = null ) {
+
+		this.isFog = true;
 
 		this.name = '';
 
@@ -11,11 +13,13 @@ class Fog {
 		this.near = near;
 		this.far = far;
 
+		this.fogTexture = texture
+
 	}
 
 	clone() {
 
-		return new Fog( this.color, this.near, this.far );
+		return new Fog( this.color, this.near, this.far, this.fogTexture );
 
 	}
 
@@ -25,13 +29,12 @@ class Fog {
 			type: 'Fog',
 			color: this.color.getHex(),
 			near: this.near,
-			far: this.far
+			far: this.far,
+			fogTexture: this.fogTexture
 		};
 
 	}
 
 }
-
-Fog.prototype.isFog = true;
 
 export { Fog };
