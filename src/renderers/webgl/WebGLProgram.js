@@ -371,9 +371,9 @@ function generateEnvMapBlendingDefine( parameters ) {
 
 }
 
-function generateCubeUVSize( parameters ) {
+function generateCubeUVSize( height ) {
 
-	const imageHeight = parameters.envMapCubeUVHeight;
+	const imageHeight = height;
 
 	if ( imageHeight === null ) return null;
 
@@ -403,7 +403,8 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 	const envMapTypeDefine = generateEnvMapTypeDefine( parameters );
 	const envMapModeDefine = generateEnvMapModeDefine( parameters );
 	const envMapBlendingDefine = generateEnvMapBlendingDefine( parameters );
-	const envMapCubeUVSize = generateCubeUVSize( parameters );
+	const envMapCubeUVSize = generateCubeUVSize( parameters.envMapCubeUVHeight );
+	const fogTextureCubeUVSize = generateCubeUVSize( parameters.fogMapCubeUVHeight );
 
 	const customExtensions = parameters.isWebGL2 ? '' : generateExtensions( parameters );
 
@@ -622,6 +623,9 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 			envMapCubeUVSize ? '#define CUBEUV_TEXEL_WIDTH ' + envMapCubeUVSize.texelWidth : '',
 			envMapCubeUVSize ? '#define CUBEUV_TEXEL_HEIGHT ' + envMapCubeUVSize.texelHeight : '',
 			envMapCubeUVSize ? '#define CUBEUV_MAX_MIP ' + envMapCubeUVSize.maxMip + '.0' : '',
+			fogTextureCubeUVSize ? '#define FOG_CUBEUV_TEXEL_WIDTH ' + fogTextureCubeUVSize.texelWidth : '',
+			fogTextureCubeUVSize ? '#define FOG_CUBEUV_TEXEL_HEIGHT ' + fogTextureCubeUVSize.texelHeight : '',
+			fogTextureCubeUVSize ? '#define FOG_CUBEUV_MAX_MIP ' + fogTextureCubeUVSize.maxMip + '.0' : '',
 			parameters.lightMap ? '#define USE_LIGHTMAP' : '',
 			parameters.aoMap ? '#define USE_AOMAP' : '',
 			parameters.emissiveMap ? '#define USE_EMISSIVEMAP' : '',

@@ -6,6 +6,14 @@ export default /* glsl */`
 
 	#ifdef USE_FOG_TEXTURE
 
+		#ifndef FOG_ENVMAP_TYPE_CUBE_UV
+
+			#define FOG_ENVMAP_TYPE_CUBE_UV
+
+			#include <fog_cube_uv_reflection_fragment>
+
+		#endif
+
 		uniform sampler2D fogTexture;
 
 		varying vec3 vFogPosition;

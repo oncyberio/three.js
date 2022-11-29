@@ -1663,7 +1663,7 @@ function WebGLRenderer( parameters = {} ) {
 				material.isMeshPhongMaterial ||
 				material.isMeshToonMaterial ||
 				material.isMeshStandardMaterial ||
-				scene.fog.fogTexture != null ||
+				(scene.fog && scene.fog.fogTexture != null) ||
 				material.envMap ) {
 
 				const uCamPos = p_uniforms.map.cameraPosition;

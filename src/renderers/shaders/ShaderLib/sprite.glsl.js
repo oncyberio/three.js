@@ -34,10 +34,13 @@ void main() {
 
 	mvPosition.xy += rotatedPosition;
 
+	vec4 worldPosition = mvPosition;
+
 	gl_Position = projectionMatrix * mvPosition;
 
 	#include <logdepthbuf_vertex>
 	#include <clipping_planes_vertex>
+
 	#include <fog_vertex>
 
 }

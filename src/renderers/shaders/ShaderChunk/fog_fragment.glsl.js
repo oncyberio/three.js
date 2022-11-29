@@ -1,7 +1,6 @@
 export default /* glsl */`
 #ifdef USE_FOG
 
-
 	#ifdef FOG_EXP2
 
 		float fogFactor = 1.0 - exp( - fogDensity * fogDensity * vFogDepth * vFogDepth );
@@ -16,7 +15,9 @@ export default /* glsl */`
 
 		vec3 p = normalize(cameraPosition.xyz - vFogPosition.xyz);
 	
-		vec3 fogColor = texture2D( fogTexture,  SampleSphericalMap(p)).rgb;
+		vec3 fogColor = fogTextureCubeUV( fogTexture, -p, 0.0 ).rgb;
+
+		fogColor = linearToOutputTexel( vec4(fogColor, 1.0) ).rgb;
 
 	#endif
 
