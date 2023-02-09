@@ -10805,28 +10805,28 @@ class BufferGeometry extends EventDispatcher {
 
 }
 
-const _inverseMatrix$2 = /*@__PURE__*/ new Matrix4();
-const _ray$2 = /*@__PURE__*/ new Ray();
-const _sphere$3 = /*@__PURE__*/ new Sphere();
+const _inverseMatrix$3 = /*@__PURE__*/ new Matrix4();
+const _ray$3 = /*@__PURE__*/ new Ray();
+const _sphere$4 = /*@__PURE__*/ new Sphere();
 
-const _vA$1 = /*@__PURE__*/ new Vector3();
-const _vB$1 = /*@__PURE__*/ new Vector3();
-const _vC$1 = /*@__PURE__*/ new Vector3();
+const _vA$2 = /*@__PURE__*/ new Vector3();
+const _vB$2 = /*@__PURE__*/ new Vector3();
+const _vC$2 = /*@__PURE__*/ new Vector3();
 
-const _tempA = /*@__PURE__*/ new Vector3();
-const _tempB = /*@__PURE__*/ new Vector3();
-const _tempC = /*@__PURE__*/ new Vector3();
+const _tempA$1 = /*@__PURE__*/ new Vector3();
+const _tempB$1 = /*@__PURE__*/ new Vector3();
+const _tempC$1 = /*@__PURE__*/ new Vector3();
 
-const _morphA = /*@__PURE__*/ new Vector3();
-const _morphB = /*@__PURE__*/ new Vector3();
-const _morphC = /*@__PURE__*/ new Vector3();
+const _morphA$1 = /*@__PURE__*/ new Vector3();
+const _morphB$1 = /*@__PURE__*/ new Vector3();
+const _morphC$1 = /*@__PURE__*/ new Vector3();
 
-const _uvA$1 = /*@__PURE__*/ new Vector2();
-const _uvB$1 = /*@__PURE__*/ new Vector2();
-const _uvC$1 = /*@__PURE__*/ new Vector2();
+const _uvA$2 = /*@__PURE__*/ new Vector2();
+const _uvB$2 = /*@__PURE__*/ new Vector2();
+const _uvC$2 = /*@__PURE__*/ new Vector2();
 
-const _intersectionPoint = /*@__PURE__*/ new Vector3();
-const _intersectionPointWorld = /*@__PURE__*/ new Vector3();
+const _intersectionPoint$1 = /*@__PURE__*/ new Vector3();
+const _intersectionPointWorld$1 = /*@__PURE__*/ new Vector3();
 
 class Mesh extends Object3D {
 
@@ -10911,21 +10911,21 @@ class Mesh extends Object3D {
 
 		if ( geometry.boundingSphere === null ) geometry.computeBoundingSphere();
 
-		_sphere$3.copy( geometry.boundingSphere );
-		_sphere$3.applyMatrix4( matrixWorld );
+		_sphere$4.copy( geometry.boundingSphere );
+		_sphere$4.applyMatrix4( matrixWorld );
 
-		if ( raycaster.ray.intersectsSphere( _sphere$3 ) === false ) return;
+		if ( raycaster.ray.intersectsSphere( _sphere$4 ) === false ) return;
 
 		//
 
-		_inverseMatrix$2.copy( matrixWorld ).invert();
-		_ray$2.copy( raycaster.ray ).applyMatrix4( _inverseMatrix$2 );
+		_inverseMatrix$3.copy( matrixWorld ).invert();
+		_ray$3.copy( raycaster.ray ).applyMatrix4( _inverseMatrix$3 );
 
 		// Check boundingBox before continuing
 
 		if ( geometry.boundingBox !== null ) {
 
-			if ( _ray$2.intersectsBox( geometry.boundingBox ) === false ) return;
+			if ( _ray$3.intersectsBox( geometry.boundingBox ) === false ) return;
 
 		}
 
@@ -10960,7 +10960,7 @@ class Mesh extends Object3D {
 						const b = index.getX( j + 1 );
 						const c = index.getX( j + 2 );
 
-						intersection = checkBufferGeometryIntersection( this, groupMaterial, raycaster, _ray$2, position, morphPosition, morphTargetsRelative, uv, uv2, a, b, c );
+						intersection = checkBufferGeometryIntersection$1( this, groupMaterial, raycaster, _ray$3, position, morphPosition, morphTargetsRelative, uv, uv2, a, b, c );
 
 						if ( intersection ) {
 
@@ -10985,7 +10985,7 @@ class Mesh extends Object3D {
 					const b = index.getX( i + 1 );
 					const c = index.getX( i + 2 );
 
-					intersection = checkBufferGeometryIntersection( this, material, raycaster, _ray$2, position, morphPosition, morphTargetsRelative, uv, uv2, a, b, c );
+					intersection = checkBufferGeometryIntersection$1( this, material, raycaster, _ray$3, position, morphPosition, morphTargetsRelative, uv, uv2, a, b, c );
 
 					if ( intersection ) {
 
@@ -11018,7 +11018,7 @@ class Mesh extends Object3D {
 						const b = j + 1;
 						const c = j + 2;
 
-						intersection = checkBufferGeometryIntersection( this, groupMaterial, raycaster, _ray$2, position, morphPosition, morphTargetsRelative, uv, uv2, a, b, c );
+						intersection = checkBufferGeometryIntersection$1( this, groupMaterial, raycaster, _ray$3, position, morphPosition, morphTargetsRelative, uv, uv2, a, b, c );
 
 						if ( intersection ) {
 
@@ -11043,7 +11043,7 @@ class Mesh extends Object3D {
 					const b = i + 1;
 					const c = i + 2;
 
-					intersection = checkBufferGeometryIntersection( this, material, raycaster, _ray$2, position, morphPosition, morphTargetsRelative, uv, uv2, a, b, c );
+					intersection = checkBufferGeometryIntersection$1( this, material, raycaster, _ray$3, position, morphPosition, morphTargetsRelative, uv, uv2, a, b, c );
 
 					if ( intersection ) {
 
@@ -11062,7 +11062,7 @@ class Mesh extends Object3D {
 
 }
 
-function checkIntersection( object, material, raycaster, ray, pA, pB, pC, point ) {
+function checkIntersection$1( object, material, raycaster, ray, pA, pB, pC, point ) {
 
 	let intersect;
 
@@ -11078,34 +11078,34 @@ function checkIntersection( object, material, raycaster, ray, pA, pB, pC, point 
 
 	if ( intersect === null ) return null;
 
-	_intersectionPointWorld.copy( point );
-	_intersectionPointWorld.applyMatrix4( object.matrixWorld );
+	_intersectionPointWorld$1.copy( point );
+	_intersectionPointWorld$1.applyMatrix4( object.matrixWorld );
 
-	const distance = raycaster.ray.origin.distanceTo( _intersectionPointWorld );
+	const distance = raycaster.ray.origin.distanceTo( _intersectionPointWorld$1 );
 
 	if ( distance < raycaster.near || distance > raycaster.far ) return null;
 
 	return {
 		distance: distance,
-		point: _intersectionPointWorld.clone(),
+		point: _intersectionPointWorld$1.clone(),
 		object: object
 	};
 
 }
 
-function checkBufferGeometryIntersection( object, material, raycaster, ray, position, morphPosition, morphTargetsRelative, uv, uv2, a, b, c ) {
+function checkBufferGeometryIntersection$1( object, material, raycaster, ray, position, morphPosition, morphTargetsRelative, uv, uv2, a, b, c ) {
 
-	_vA$1.fromBufferAttribute( position, a );
-	_vB$1.fromBufferAttribute( position, b );
-	_vC$1.fromBufferAttribute( position, c );
+	_vA$2.fromBufferAttribute( position, a );
+	_vB$2.fromBufferAttribute( position, b );
+	_vC$2.fromBufferAttribute( position, c );
 
 	const morphInfluences = object.morphTargetInfluences;
 
 	if ( morphPosition && morphInfluences ) {
 
-		_morphA.set( 0, 0, 0 );
-		_morphB.set( 0, 0, 0 );
-		_morphC.set( 0, 0, 0 );
+		_morphA$1.set( 0, 0, 0 );
+		_morphB$1.set( 0, 0, 0 );
+		_morphC$1.set( 0, 0, 0 );
 
 		for ( let i = 0, il = morphPosition.length; i < il; i ++ ) {
 
@@ -11114,61 +11114,61 @@ function checkBufferGeometryIntersection( object, material, raycaster, ray, posi
 
 			if ( influence === 0 ) continue;
 
-			_tempA.fromBufferAttribute( morphAttribute, a );
-			_tempB.fromBufferAttribute( morphAttribute, b );
-			_tempC.fromBufferAttribute( morphAttribute, c );
+			_tempA$1.fromBufferAttribute( morphAttribute, a );
+			_tempB$1.fromBufferAttribute( morphAttribute, b );
+			_tempC$1.fromBufferAttribute( morphAttribute, c );
 
 			if ( morphTargetsRelative ) {
 
-				_morphA.addScaledVector( _tempA, influence );
-				_morphB.addScaledVector( _tempB, influence );
-				_morphC.addScaledVector( _tempC, influence );
+				_morphA$1.addScaledVector( _tempA$1, influence );
+				_morphB$1.addScaledVector( _tempB$1, influence );
+				_morphC$1.addScaledVector( _tempC$1, influence );
 
 			} else {
 
-				_morphA.addScaledVector( _tempA.sub( _vA$1 ), influence );
-				_morphB.addScaledVector( _tempB.sub( _vB$1 ), influence );
-				_morphC.addScaledVector( _tempC.sub( _vC$1 ), influence );
+				_morphA$1.addScaledVector( _tempA$1.sub( _vA$2 ), influence );
+				_morphB$1.addScaledVector( _tempB$1.sub( _vB$2 ), influence );
+				_morphC$1.addScaledVector( _tempC$1.sub( _vC$2 ), influence );
 
 			}
 
 		}
 
-		_vA$1.add( _morphA );
-		_vB$1.add( _morphB );
-		_vC$1.add( _morphC );
+		_vA$2.add( _morphA$1 );
+		_vB$2.add( _morphB$1 );
+		_vC$2.add( _morphC$1 );
 
 	}
 
 	if ( object.isSkinnedMesh ) {
 
-		object.boneTransform( a, _vA$1 );
-		object.boneTransform( b, _vB$1 );
-		object.boneTransform( c, _vC$1 );
+		object.boneTransform( a, _vA$2 );
+		object.boneTransform( b, _vB$2 );
+		object.boneTransform( c, _vC$2 );
 
 	}
 
-	const intersection = checkIntersection( object, material, raycaster, ray, _vA$1, _vB$1, _vC$1, _intersectionPoint );
+	const intersection = checkIntersection$1( object, material, raycaster, ray, _vA$2, _vB$2, _vC$2, _intersectionPoint$1 );
 
 	if ( intersection ) {
 
 		if ( uv ) {
 
-			_uvA$1.fromBufferAttribute( uv, a );
-			_uvB$1.fromBufferAttribute( uv, b );
-			_uvC$1.fromBufferAttribute( uv, c );
+			_uvA$2.fromBufferAttribute( uv, a );
+			_uvB$2.fromBufferAttribute( uv, b );
+			_uvC$2.fromBufferAttribute( uv, c );
 
-			intersection.uv = Triangle.getUV( _intersectionPoint, _vA$1, _vB$1, _vC$1, _uvA$1, _uvB$1, _uvC$1, new Vector2() );
+			intersection.uv = Triangle.getUV( _intersectionPoint$1, _vA$2, _vB$2, _vC$2, _uvA$2, _uvB$2, _uvC$2, new Vector2() );
 
 		}
 
 		if ( uv2 ) {
 
-			_uvA$1.fromBufferAttribute( uv2, a );
-			_uvB$1.fromBufferAttribute( uv2, b );
-			_uvC$1.fromBufferAttribute( uv2, c );
+			_uvA$2.fromBufferAttribute( uv2, a );
+			_uvB$2.fromBufferAttribute( uv2, b );
+			_uvC$2.fromBufferAttribute( uv2, c );
 
-			intersection.uv2 = Triangle.getUV( _intersectionPoint, _vA$1, _vB$1, _vC$1, _uvA$1, _uvB$1, _uvC$1, new Vector2() );
+			intersection.uv2 = Triangle.getUV( _intersectionPoint$1, _vA$2, _vB$2, _vC$2, _uvA$2, _uvB$2, _uvC$2, new Vector2() );
 
 		}
 
@@ -11180,7 +11180,7 @@ function checkBufferGeometryIntersection( object, material, raycaster, ray, posi
 			materialIndex: 0
 		};
 
-		Triangle.getNormal( _vA$1, _vB$1, _vC$1, face.normal );
+		Triangle.getNormal( _vA$2, _vB$2, _vC$2, face.normal );
 
 		intersection.face = face;
 
@@ -12387,7 +12387,7 @@ class Plane {
 
 }
 
-const _sphere$2 = /*@__PURE__*/ new Sphere();
+const _sphere$3 = /*@__PURE__*/ new Sphere();
 const _vector$7 = /*@__PURE__*/ new Vector3();
 
 class Frustum {
@@ -12453,19 +12453,19 @@ class Frustum {
 
 		if ( geometry.boundingSphere === null ) geometry.computeBoundingSphere();
 
-		_sphere$2.copy( geometry.boundingSphere ).applyMatrix4( object.matrixWorld );
+		_sphere$3.copy( geometry.boundingSphere ).applyMatrix4( object.matrixWorld );
 
-		return this.intersectsSphere( _sphere$2 );
+		return this.intersectsSphere( _sphere$3 );
 
 	}
 
 	intersectsSprite( sprite ) {
 
-		_sphere$2.center.set( 0, 0, 0 );
-		_sphere$2.radius = 0.7071067811865476;
-		_sphere$2.applyMatrix4( sprite.matrixWorld );
+		_sphere$3.center.set( 0, 0, 0 );
+		_sphere$3.radius = 0.7071067811865476;
+		_sphere$3.applyMatrix4( sprite.matrixWorld );
 
-		return this.intersectsSphere( _sphere$2 );
+		return this.intersectsSphere( _sphere$3 );
 
 	}
 
@@ -16605,13 +16605,23 @@ function WebGLIndexedBufferRenderer( gl, extensions, info, capabilities ) {
 
 	}
 
+	function renderMultiDrawInstanced( counts, starts, instances, length ){
+
+		let extension = extensions.get("WEBGL_multi_draw");
+
+		let methodName = 'multiDrawElementsInstancedWEBGL';
+
+		extension[ methodName ](mode, counts, 0, type, starts, 0, instances, 0, length);
+
+	}
+
 	//
 
 	this.setMode = setMode;
 	this.setIndex = setIndex;
 	this.render = render;
 	this.renderInstances = renderInstances;
-
+	this.renderMultiDrawInstanced = renderMultiDrawInstanced;
 }
 
 function WebGLInfo( gl ) {
@@ -27715,7 +27725,14 @@ function WebGLRenderer( parameters = {} ) {
 
 		}
 
-		if ( object.isInstancedMesh ) {
+		if( object.isMultiDraw ) {
+
+			const opts = object.multiDrawOpts;
+
+			renderer.renderMultiDrawInstanced(  opts.counts, opts.starts, opts.instances, opts.starts.length );
+
+		}
+		else if ( object.isInstancedMesh ) {
 
 			renderer.renderInstances( drawStart, drawCount, object.count );
 
@@ -29853,13 +29870,13 @@ const _alignedPosition = /*@__PURE__*/ new Vector2();
 const _rotatedPosition = /*@__PURE__*/ new Vector2();
 const _viewWorldMatrix = /*@__PURE__*/ new Matrix4();
 
-const _vA = /*@__PURE__*/ new Vector3();
-const _vB = /*@__PURE__*/ new Vector3();
-const _vC = /*@__PURE__*/ new Vector3();
+const _vA$1 = /*@__PURE__*/ new Vector3();
+const _vB$1 = /*@__PURE__*/ new Vector3();
+const _vC$1 = /*@__PURE__*/ new Vector3();
 
-const _uvA = /*@__PURE__*/ new Vector2();
-const _uvB = /*@__PURE__*/ new Vector2();
-const _uvC = /*@__PURE__*/ new Vector2();
+const _uvA$1 = /*@__PURE__*/ new Vector2();
+const _uvB$1 = /*@__PURE__*/ new Vector2();
+const _uvC$1 = /*@__PURE__*/ new Vector2();
 
 class Sprite extends Object3D {
 
@@ -29930,24 +29947,24 @@ class Sprite extends Object3D {
 
 		const center = this.center;
 
-		transformVertex( _vA.set( - 0.5, - 0.5, 0 ), _mvPosition, center, _worldScale, sin, cos );
-		transformVertex( _vB.set( 0.5, - 0.5, 0 ), _mvPosition, center, _worldScale, sin, cos );
-		transformVertex( _vC.set( 0.5, 0.5, 0 ), _mvPosition, center, _worldScale, sin, cos );
+		transformVertex( _vA$1.set( - 0.5, - 0.5, 0 ), _mvPosition, center, _worldScale, sin, cos );
+		transformVertex( _vB$1.set( 0.5, - 0.5, 0 ), _mvPosition, center, _worldScale, sin, cos );
+		transformVertex( _vC$1.set( 0.5, 0.5, 0 ), _mvPosition, center, _worldScale, sin, cos );
 
-		_uvA.set( 0, 0 );
-		_uvB.set( 1, 0 );
-		_uvC.set( 1, 1 );
+		_uvA$1.set( 0, 0 );
+		_uvB$1.set( 1, 0 );
+		_uvC$1.set( 1, 1 );
 
 		// check first triangle
-		let intersect = raycaster.ray.intersectTriangle( _vA, _vB, _vC, false, _intersectPoint );
+		let intersect = raycaster.ray.intersectTriangle( _vA$1, _vB$1, _vC$1, false, _intersectPoint );
 
 		if ( intersect === null ) {
 
 			// check second triangle
-			transformVertex( _vB.set( - 0.5, 0.5, 0 ), _mvPosition, center, _worldScale, sin, cos );
-			_uvB.set( 0, 1 );
+			transformVertex( _vB$1.set( - 0.5, 0.5, 0 ), _mvPosition, center, _worldScale, sin, cos );
+			_uvB$1.set( 0, 1 );
 
-			intersect = raycaster.ray.intersectTriangle( _vA, _vC, _vB, false, _intersectPoint );
+			intersect = raycaster.ray.intersectTriangle( _vA$1, _vC$1, _vB$1, false, _intersectPoint );
 			if ( intersect === null ) {
 
 				return;
@@ -29964,7 +29981,7 @@ class Sprite extends Object3D {
 
 			distance: distance,
 			point: _intersectPoint.clone(),
-			uv: Triangle.getUV( _intersectPoint, _vA, _vB, _vC, _uvA, _uvB, _uvC, new Vector2() ),
+			uv: Triangle.getUV( _intersectPoint, _vA$1, _vB$1, _vC$1, _uvA$1, _uvB$1, _uvC$1, new Vector2() ),
 			face: null,
 			object: this
 
@@ -30856,6 +30873,394 @@ class Skeleton {
 		return data;
 
 	}
+
+}
+
+const _inverseMatrix$2 = /*@__PURE__*/ new Matrix4();
+const _ray$2 = /*@__PURE__*/ new Ray();
+const _sphere$2 = /*@__PURE__*/ new Sphere();
+
+const _vA = /*@__PURE__*/ new Vector3();
+const _vB = /*@__PURE__*/ new Vector3();
+const _vC = /*@__PURE__*/ new Vector3();
+
+const _tempA = /*@__PURE__*/ new Vector3();
+const _tempB = /*@__PURE__*/ new Vector3();
+const _tempC = /*@__PURE__*/ new Vector3();
+
+const _morphA = /*@__PURE__*/ new Vector3();
+const _morphB = /*@__PURE__*/ new Vector3();
+const _morphC = /*@__PURE__*/ new Vector3();
+
+const _uvA = /*@__PURE__*/ new Vector2();
+const _uvB = /*@__PURE__*/ new Vector2();
+const _uvC = /*@__PURE__*/ new Vector2();
+
+const _intersectionPoint = /*@__PURE__*/ new Vector3();
+const _intersectionPointWorld = /*@__PURE__*/ new Vector3();
+
+class MultiDrawMesh extends Object3D {
+
+	constructor( geometry = new BufferGeometry(), material = new MeshBasicMaterial() ) {
+
+		super();
+
+		this.isMesh = true;
+
+		this.type = 'Mesh';
+
+		this.geometry = geometry;
+		this.material = material;
+
+		this.updateMorphTargets();
+
+		this.isMultiDraw = true;
+
+
+	}
+
+	copy( source, recursive ) {
+
+		super.copy( source, recursive );
+
+		if ( source.morphTargetInfluences !== undefined ) {
+
+			this.morphTargetInfluences = source.morphTargetInfluences.slice();
+
+		}
+
+		if ( source.morphTargetDictionary !== undefined ) {
+
+			this.morphTargetDictionary = Object.assign( {}, source.morphTargetDictionary );
+
+		}
+
+		this.material = source.material;
+		this.geometry = source.geometry;
+
+		return this;
+
+	}
+
+	updateMorphTargets() {
+
+		const geometry = this.geometry;
+
+		const morphAttributes = geometry.morphAttributes;
+		const keys = Object.keys( morphAttributes );
+
+		if ( keys.length > 0 ) {
+
+			const morphAttribute = morphAttributes[ keys[ 0 ] ];
+
+			if ( morphAttribute !== undefined ) {
+
+				this.morphTargetInfluences = [];
+				this.morphTargetDictionary = {};
+
+				for ( let m = 0, ml = morphAttribute.length; m < ml; m ++ ) {
+
+					const name = morphAttribute[ m ].name || String( m );
+
+					this.morphTargetInfluences.push( 0 );
+					this.morphTargetDictionary[ name ] = m;
+
+				}
+
+			}
+
+		}
+
+	}
+
+	raycast( raycaster, intersects ) {
+
+		const geometry = this.geometry;
+		const material = this.material;
+		const matrixWorld = this.matrixWorld;
+
+		if ( material === undefined ) return;
+
+		// Checking boundingSphere distance to ray
+
+		if ( geometry.boundingSphere === null ) geometry.computeBoundingSphere();
+
+		_sphere$2.copy( geometry.boundingSphere );
+		_sphere$2.applyMatrix4( matrixWorld );
+
+		if ( raycaster.ray.intersectsSphere( _sphere$2 ) === false ) return;
+
+		//
+
+		_inverseMatrix$2.copy( matrixWorld ).invert();
+		_ray$2.copy( raycaster.ray ).applyMatrix4( _inverseMatrix$2 );
+
+		// Check boundingBox before continuing
+
+		if ( geometry.boundingBox !== null ) {
+
+			if ( _ray$2.intersectsBox( geometry.boundingBox ) === false ) return;
+
+		}
+
+		let intersection;
+
+		const index = geometry.index;
+		const position = geometry.attributes.position;
+		const morphPosition = geometry.morphAttributes.position;
+		const morphTargetsRelative = geometry.morphTargetsRelative;
+		const uv = geometry.attributes.uv;
+		const uv2 = geometry.attributes.uv2;
+		const groups = geometry.groups;
+		const drawRange = geometry.drawRange;
+
+		if ( index !== null ) {
+
+			// indexed buffer geometry
+
+			if ( Array.isArray( material ) ) {
+
+				for ( let i = 0, il = groups.length; i < il; i ++ ) {
+
+					const group = groups[ i ];
+					const groupMaterial = material[ group.materialIndex ];
+
+					const start = Math.max( group.start, drawRange.start );
+					const end = Math.min( index.count, Math.min( ( group.start + group.count ), ( drawRange.start + drawRange.count ) ) );
+
+					for ( let j = start, jl = end; j < jl; j += 3 ) {
+
+						const a = index.getX( j );
+						const b = index.getX( j + 1 );
+						const c = index.getX( j + 2 );
+
+						intersection = checkBufferGeometryIntersection( this, groupMaterial, raycaster, _ray$2, position, morphPosition, morphTargetsRelative, uv, uv2, a, b, c );
+
+						if ( intersection ) {
+
+							intersection.faceIndex = Math.floor( j / 3 ); // triangle number in indexed buffer semantics
+							intersection.face.materialIndex = group.materialIndex;
+							intersects.push( intersection );
+
+						}
+
+					}
+
+				}
+
+			} else {
+
+				const start = Math.max( 0, drawRange.start );
+				const end = Math.min( index.count, ( drawRange.start + drawRange.count ) );
+
+				for ( let i = start, il = end; i < il; i += 3 ) {
+
+					const a = index.getX( i );
+					const b = index.getX( i + 1 );
+					const c = index.getX( i + 2 );
+
+					intersection = checkBufferGeometryIntersection( this, material, raycaster, _ray$2, position, morphPosition, morphTargetsRelative, uv, uv2, a, b, c );
+
+					if ( intersection ) {
+
+						intersection.faceIndex = Math.floor( i / 3 ); // triangle number in indexed buffer semantics
+						intersects.push( intersection );
+
+					}
+
+				}
+
+			}
+
+		} else if ( position !== undefined ) {
+
+			// non-indexed buffer geometry
+
+			if ( Array.isArray( material ) ) {
+
+				for ( let i = 0, il = groups.length; i < il; i ++ ) {
+
+					const group = groups[ i ];
+					const groupMaterial = material[ group.materialIndex ];
+
+					const start = Math.max( group.start, drawRange.start );
+					const end = Math.min( position.count, Math.min( ( group.start + group.count ), ( drawRange.start + drawRange.count ) ) );
+
+					for ( let j = start, jl = end; j < jl; j += 3 ) {
+
+						const a = j;
+						const b = j + 1;
+						const c = j + 2;
+
+						intersection = checkBufferGeometryIntersection( this, groupMaterial, raycaster, _ray$2, position, morphPosition, morphTargetsRelative, uv, uv2, a, b, c );
+
+						if ( intersection ) {
+
+							intersection.faceIndex = Math.floor( j / 3 ); // triangle number in non-indexed buffer semantics
+							intersection.face.materialIndex = group.materialIndex;
+							intersects.push( intersection );
+
+						}
+
+					}
+
+				}
+
+			} else {
+
+				const start = Math.max( 0, drawRange.start );
+				const end = Math.min( position.count, ( drawRange.start + drawRange.count ) );
+
+				for ( let i = start, il = end; i < il; i += 3 ) {
+
+					const a = i;
+					const b = i + 1;
+					const c = i + 2;
+
+					intersection = checkBufferGeometryIntersection( this, material, raycaster, _ray$2, position, morphPosition, morphTargetsRelative, uv, uv2, a, b, c );
+
+					if ( intersection ) {
+
+						intersection.faceIndex = Math.floor( i / 3 ); // triangle number in non-indexed buffer semantics
+						intersects.push( intersection );
+
+					}
+
+				}
+
+			}
+
+		}
+
+	}
+
+}
+
+function checkIntersection( object, material, raycaster, ray, pA, pB, pC, point ) {
+
+	let intersect;
+
+	if ( material.side === BackSide ) {
+
+		intersect = ray.intersectTriangle( pC, pB, pA, true, point );
+
+	} else {
+
+		intersect = ray.intersectTriangle( pA, pB, pC, material.side !== DoubleSide, point );
+
+	}
+
+	if ( intersect === null ) return null;
+
+	_intersectionPointWorld.copy( point );
+	_intersectionPointWorld.applyMatrix4( object.matrixWorld );
+
+	const distance = raycaster.ray.origin.distanceTo( _intersectionPointWorld );
+
+	if ( distance < raycaster.near || distance > raycaster.far ) return null;
+
+	return {
+		distance: distance,
+		point: _intersectionPointWorld.clone(),
+		object: object
+	};
+
+}
+
+function checkBufferGeometryIntersection( object, material, raycaster, ray, position, morphPosition, morphTargetsRelative, uv, uv2, a, b, c ) {
+
+	_vA.fromBufferAttribute( position, a );
+	_vB.fromBufferAttribute( position, b );
+	_vC.fromBufferAttribute( position, c );
+
+	const morphInfluences = object.morphTargetInfluences;
+
+	if ( morphPosition && morphInfluences ) {
+
+		_morphA.set( 0, 0, 0 );
+		_morphB.set( 0, 0, 0 );
+		_morphC.set( 0, 0, 0 );
+
+		for ( let i = 0, il = morphPosition.length; i < il; i ++ ) {
+
+			const influence = morphInfluences[ i ];
+			const morphAttribute = morphPosition[ i ];
+
+			if ( influence === 0 ) continue;
+
+			_tempA.fromBufferAttribute( morphAttribute, a );
+			_tempB.fromBufferAttribute( morphAttribute, b );
+			_tempC.fromBufferAttribute( morphAttribute, c );
+
+			if ( morphTargetsRelative ) {
+
+				_morphA.addScaledVector( _tempA, influence );
+				_morphB.addScaledVector( _tempB, influence );
+				_morphC.addScaledVector( _tempC, influence );
+
+			} else {
+
+				_morphA.addScaledVector( _tempA.sub( _vA ), influence );
+				_morphB.addScaledVector( _tempB.sub( _vB ), influence );
+				_morphC.addScaledVector( _tempC.sub( _vC ), influence );
+
+			}
+
+		}
+
+		_vA.add( _morphA );
+		_vB.add( _morphB );
+		_vC.add( _morphC );
+
+	}
+
+	if ( object.isSkinnedMesh ) {
+
+		object.boneTransform( a, _vA );
+		object.boneTransform( b, _vB );
+		object.boneTransform( c, _vC );
+
+	}
+
+	const intersection = checkIntersection( object, material, raycaster, ray, _vA, _vB, _vC, _intersectionPoint );
+
+	if ( intersection ) {
+
+		if ( uv ) {
+
+			_uvA.fromBufferAttribute( uv, a );
+			_uvB.fromBufferAttribute( uv, b );
+			_uvC.fromBufferAttribute( uv, c );
+
+			intersection.uv = Triangle.getUV( _intersectionPoint, _vA, _vB, _vC, _uvA, _uvB, _uvC, new Vector2() );
+
+		}
+
+		if ( uv2 ) {
+
+			_uvA.fromBufferAttribute( uv2, a );
+			_uvB.fromBufferAttribute( uv2, b );
+			_uvC.fromBufferAttribute( uv2, c );
+
+			intersection.uv2 = Triangle.getUV( _intersectionPoint, _vA, _vB, _vC, _uvA, _uvB, _uvC, new Vector2() );
+
+		}
+
+		const face = {
+			a: a,
+			b: b,
+			c: c,
+			normal: new Vector3(),
+			materialIndex: 0
+		};
+
+		Triangle.getNormal( _vA, _vB, _vC, face.normal );
+
+		intersection.face = face;
+
+	}
+
+	return intersection;
 
 }
 
@@ -50361,4 +50766,4 @@ if ( typeof window !== 'undefined' ) {
 
 }
 
-export { ACESFilmicToneMapping, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AlphaFormat, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightProbe, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, Audio, AudioAnalyser, AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BasicDepthPacking, BasicShadowMap, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxBufferGeometry, BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, ByteType, Cache, Camera, CameraHelper, CanvasTexture, CapsuleBufferGeometry, CapsuleGeometry, CatmullRomCurve3, CineonToneMapping, CircleBufferGeometry, CircleGeometry, ClampToEdgeWrapping, Clock, Color, ColorKeyframeTrack, ColorManagement, CompressedArrayTexture, CompressedTexture, CompressedTextureLoader, ConeBufferGeometry, ConeGeometry, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderBufferGeometry, CylinderGeometry, Cylindrical, Data3DTexture, DataArrayTexture, DataTexture, DataTexture2DArray, DataTexture3D, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthStencilFormat, DepthTexture, DirectionalLight, DirectionalLightHelper, DiscreteInterpolant, DodecahedronBufferGeometry, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, EdgesGeometry, EllipseCurve, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, ExtrudeBufferGeometry, ExtrudeGeometry, FileLoader, Float16BufferAttribute, Float32BufferAttribute, Float64BufferAttribute, FloatType, Fog, FogExp2, FramebufferTexture, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, GreaterDepth, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, HemisphereLight, HemisphereLightHelper, HemisphereLightProbe, IcosahedronBufferGeometry, IcosahedronGeometry, ImageBitmapLoader, ImageLoader, ImageUtils, ImmediateRenderObject, IncrementStencilOp, IncrementWrapStencilOp, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, InstancedSkinnedMesh, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LatheBufferGeometry, LatheGeometry, Layers, LessDepth, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightProbe, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearEncoding, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace, LinearToneMapping, Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, MOUSE, Material, MaterialLoader, MathUtils, Matrix3, Matrix4, MaxEquation, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MultiplyBlending, MultiplyOperation, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectSpaceNormalMap, OctahedronBufferGeometry, OctahedronGeometry, OneFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrthographicCamera, PCFShadowMap, PCFSoftShadowMap, PMREMGenerator, Path, PerspectiveCamera, Plane, PlaneBufferGeometry, PlaneGeometry, PlaneHelper, PointLight, PointLightHelper, Points, PointsMaterial, PolarGridHelper, PolyhedronBufferGeometry, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBFormat, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGFormat, RGIntegerFormat, RawShaderMaterial, Ray, Raycaster, RectAreaLight, RedFormat, RedIntegerFormat, ReinhardToneMapping, RepeatWrapping, ReplaceStencilOp, ReverseSubtractEquation, RingBufferGeometry, RingGeometry, SRGBColorSpace, Scene, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, Shape, ShapeBufferGeometry, ShapeGeometry, ShapePath, ShapeUtils, ShortType, Skeleton, SkeletonHelper, SkinnedMesh, Source, Sphere, SphereBufferGeometry, SphereGeometry, Spherical, SphericalHarmonics3, SplineCurve, SpotLight, SpotLightHelper, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TetrahedronBufferGeometry, TetrahedronGeometry, Texture, TextureLoader, TorusBufferGeometry, TorusGeometry, TorusKnotBufferGeometry, TorusKnotGeometry, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeBufferGeometry, TubeGeometry, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, UniformsLib, UniformsUtils, UnsignedByteType, UnsignedInt248Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoTexture, WebGL1Renderer, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLMultisampleRenderTarget, WebGLRenderTarget, WebGLRenderer, WebGLUtils, WireframeGeometry, WrapAroundEnding, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, _SRGBAFormat, sRGBEncoding };
+export { ACESFilmicToneMapping, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AlphaFormat, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightProbe, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, Audio, AudioAnalyser, AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BasicDepthPacking, BasicShadowMap, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxBufferGeometry, BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, ByteType, Cache, Camera, CameraHelper, CanvasTexture, CapsuleBufferGeometry, CapsuleGeometry, CatmullRomCurve3, CineonToneMapping, CircleBufferGeometry, CircleGeometry, ClampToEdgeWrapping, Clock, Color, ColorKeyframeTrack, ColorManagement, CompressedArrayTexture, CompressedTexture, CompressedTextureLoader, ConeBufferGeometry, ConeGeometry, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderBufferGeometry, CylinderGeometry, Cylindrical, Data3DTexture, DataArrayTexture, DataTexture, DataTexture2DArray, DataTexture3D, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthStencilFormat, DepthTexture, DirectionalLight, DirectionalLightHelper, DiscreteInterpolant, DodecahedronBufferGeometry, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, EdgesGeometry, EllipseCurve, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, ExtrudeBufferGeometry, ExtrudeGeometry, FileLoader, Float16BufferAttribute, Float32BufferAttribute, Float64BufferAttribute, FloatType, Fog, FogExp2, FramebufferTexture, FrontSide, Frustum, GLBufferAttribute, GLSL1, GLSL3, GreaterDepth, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, HemisphereLight, HemisphereLightHelper, HemisphereLightProbe, IcosahedronBufferGeometry, IcosahedronGeometry, ImageBitmapLoader, ImageLoader, ImageUtils, ImmediateRenderObject, IncrementStencilOp, IncrementWrapStencilOp, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, InstancedSkinnedMesh, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LatheBufferGeometry, LatheGeometry, Layers, LessDepth, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightProbe, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearEncoding, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace, LinearToneMapping, Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, MOUSE, Material, MaterialLoader, MathUtils, Matrix3, Matrix4, MaxEquation, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MultiDrawMesh, MultiplyBlending, MultiplyOperation, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectSpaceNormalMap, OctahedronBufferGeometry, OctahedronGeometry, OneFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrthographicCamera, PCFShadowMap, PCFSoftShadowMap, PMREMGenerator, Path, PerspectiveCamera, Plane, PlaneBufferGeometry, PlaneGeometry, PlaneHelper, PointLight, PointLightHelper, Points, PointsMaterial, PolarGridHelper, PolyhedronBufferGeometry, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBFormat, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGFormat, RGIntegerFormat, RawShaderMaterial, Ray, Raycaster, RectAreaLight, RedFormat, RedIntegerFormat, ReinhardToneMapping, RepeatWrapping, ReplaceStencilOp, ReverseSubtractEquation, RingBufferGeometry, RingGeometry, SRGBColorSpace, Scene, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, Shape, ShapeBufferGeometry, ShapeGeometry, ShapePath, ShapeUtils, ShortType, Skeleton, SkeletonHelper, SkinnedMesh, Source, Sphere, SphereBufferGeometry, SphereGeometry, Spherical, SphericalHarmonics3, SplineCurve, SpotLight, SpotLightHelper, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TetrahedronBufferGeometry, TetrahedronGeometry, Texture, TextureLoader, TorusBufferGeometry, TorusGeometry, TorusKnotBufferGeometry, TorusKnotGeometry, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeBufferGeometry, TubeGeometry, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, UniformsLib, UniformsUtils, UnsignedByteType, UnsignedInt248Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoTexture, WebGL1Renderer, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLMultisampleRenderTarget, WebGLRenderTarget, WebGLRenderer, WebGLUtils, WireframeGeometry, WrapAroundEnding, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, _SRGBAFormat, sRGBEncoding };

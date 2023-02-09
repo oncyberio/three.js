@@ -813,7 +813,14 @@ function WebGLRenderer( parameters = {} ) {
 
 		}
 
-		if ( object.isInstancedMesh ) {
+		if( object.isMultiDraw ) {
+
+			const opts = object.multiDrawOpts
+
+			renderer.renderMultiDrawInstanced(  opts.counts, opts.starts, opts.instances, opts.starts.length )
+
+		}
+		else if ( object.isInstancedMesh ) {
 
 			renderer.renderInstances( drawStart, drawCount, object.count );
 

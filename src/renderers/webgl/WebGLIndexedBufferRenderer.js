@@ -58,13 +58,23 @@ function WebGLIndexedBufferRenderer( gl, extensions, info, capabilities ) {
 
 	}
 
+	function renderMultiDrawInstanced( counts, starts, instances, length ){
+
+		let extension = extensions.get("WEBGL_multi_draw")
+
+		let methodName = 'multiDrawElementsInstancedWEBGL';
+
+		extension[ methodName ](mode, counts, 0, type, starts, 0, instances, 0, length);
+
+	}
+
 	//
 
 	this.setMode = setMode;
 	this.setIndex = setIndex;
 	this.render = render;
 	this.renderInstances = renderInstances;
-
+	this.renderMultiDrawInstanced = renderMultiDrawInstanced
 }
 
 
