@@ -170,5 +170,8 @@
       "build/three.module.js"
     ],
     "directories": {}
+  },
+  "dependencies": {
+    "spectorjs": "^0.9.27"
   }
 }

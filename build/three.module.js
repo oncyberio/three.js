@@ -3,7 +3,7 @@
  * Copyright 2010-2022 Three.js Authors
  * SPDX-License-Identifier: MIT
  */
-const REVISION = 'cyber-01';
+const REVISION = '144.0';
 const MOUSE = { LEFT: 0, MIDDLE: 1, RIGHT: 2, ROTATE: 0, DOLLY: 1, PAN: 2 };
 const TOUCH = { ROTATE: 0, PAN: 1, DOLLY_PAN: 2, DOLLY_ROTATE: 3 };
 const CullFaceNone = 0;
@@ -14823,6 +14823,8 @@ function WebGLCapabilities( gl, extensions, parameters ) {
 
 	const logarithmicDepthBuffer = parameters.logarithmicDepthBuffer === true;
 
+	extensions.get("WEBGL_multi_draw");
+
 	const maxTextures = gl.getParameter( 34930 );
 	const maxVertexTextures = gl.getParameter( 35660 );
 	const maxTextureSize = gl.getParameter( 3379 );
@@ -14840,6 +14842,8 @@ function WebGLCapabilities( gl, extensions, parameters ) {
 	const maxSamples = isWebGL2 ? gl.getParameter( 36183 ) : 0;
 
 	return {
+
+		multidraw: null,
 
 		isWebGL2: isWebGL2,
 
@@ -16607,11 +16611,33 @@ function WebGLIndexedBufferRenderer( gl, extensions, info, capabilities ) {
 
 	function renderMultiDrawInstanced( counts, starts, instances, length ){
 
-		let extension = extensions.get("WEBGL_multi_draw");
+		let extension = capabilities.multidraw;
 
-		let methodName = 'multiDrawElementsInstancedWEBGL';
+		if( capabilities.multidraw == null ){
 
-		extension[ methodName ](mode, counts, 0, type, starts, 0, instances, 0, length);
+			let i = 0;
+
+			while(i < length){
+
+				this.renderInstances( starts[i], counts[i], instances[i]);
+
+				i++;
+			}
+
+		}
+
+		else {
+
+			let methodName = 'multiDrawElementsInstancedWEBGL';
+
+			extension[ methodName ](mode, counts, 0, type, starts, 0, instances, 0, length);
+
+			let countsTotal = counts.reduce((e,t)=>e + t, 0);
+			let instanceTotal = instances.reduce((e,t)=>e + t, 0);
+
+			info.update( countsTotal, mode, instanceTotal );
+
+		}
 
 	}
 

@@ -69,6 +69,8 @@ function WebGLCapabilities( gl, extensions, parameters ) {
 
 	const logarithmicDepthBuffer = parameters.logarithmicDepthBuffer === true;
 
+	const multidraw =  extensions.get("WEBGL_multi_draw")
+
 	const maxTextures = gl.getParameter( gl.MAX_TEXTURE_IMAGE_UNITS );
 	const maxVertexTextures = gl.getParameter( gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS );
 	const maxTextureSize = gl.getParameter( gl.MAX_TEXTURE_SIZE );
@@ -86,6 +88,8 @@ function WebGLCapabilities( gl, extensions, parameters ) {
 	const maxSamples = isWebGL2 ? gl.getParameter( gl.MAX_SAMPLES ) : 0;
 
 	return {
+
+		multidraw: null,
 
 		isWebGL2: isWebGL2,
 

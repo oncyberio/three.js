@@ -7,7 +7,7 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-const REVISION = 'cyber-01';
+const REVISION = '144.0';
 const MOUSE = {
 	LEFT: 0,
 	MIDDLE: 1,
@@ -9974,6 +9974,7 @@ function WebGLCapabilities(gl, extensions, parameters) {
 	}
 	const drawBuffers = isWebGL2 || extensions.has('WEBGL_draw_buffers');
 	const logarithmicDepthBuffer = parameters.logarithmicDepthBuffer === true;
+	extensions.get("WEBGL_multi_draw");
 	const maxTextures = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
 	const maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
 	const maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
@@ -9987,6 +9988,7 @@ function WebGLCapabilities(gl, extensions, parameters) {
 	const floatVertexTextures = vertexTextures && floatFragmentTextures;
 	const maxSamples = isWebGL2 ? gl.getParameter(gl.MAX_SAMPLES) : 0;
 	return {
+		multidraw: null,
 		isWebGL2: isWebGL2,
 		drawBuffers: drawBuffers,
 		getMaxAnisotropy: getMaxAnisotropy,
@@ -11163,9 +11165,20 @@ function WebGLIndexedBufferRenderer(gl, extensions, info, capabilities) {
 		info.update(count, mode, primcount);
 	}
 	function renderMultiDrawInstanced(counts, starts, instances, length) {
-		let extension = extensions.get("WEBGL_multi_draw");
-		let methodName = 'multiDrawElementsInstancedWEBGL';
-		extension[methodName](mode, counts, 0, type, starts, 0, instances, 0, length);
+		let extension = capabilities.multidraw;
+		if (capabilities.multidraw == null) {
+			let i = 0;
+			while (i < length) {
+				this.renderInstances(starts[i], counts[i], instances[i]);
+				i++;
+			}
+		} else {
+			let methodName = 'multiDrawElementsInstancedWEBGL';
+			extension[methodName](mode, counts, 0, type, starts, 0, instances, 0, length);
+			let countsTotal = counts.reduce((e, t) => e + t, 0);
+			let instanceTotal = instances.reduce((e, t) => e + t, 0);
+			info.update(countsTotal, mode, instanceTotal);
+		}
 	}
 
 	//

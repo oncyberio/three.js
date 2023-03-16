@@ -60,11 +60,33 @@ function WebGLIndexedBufferRenderer( gl, extensions, info, capabilities ) {
 
 	function renderMultiDrawInstanced( counts, starts, instances, length ){
 
-		let extension = extensions.get("WEBGL_multi_draw")
+		let extension = capabilities.multidraw
 
-		let methodName = 'multiDrawElementsInstancedWEBGL';
+		if( capabilities.multidraw == null ){
 
-		extension[ methodName ](mode, counts, 0, type, starts, 0, instances, 0, length);
+			let i = 0
+
+			while(i < length){
+
+				this.renderInstances( starts[i], counts[i], instances[i])
+
+				i++
+			}
+
+		}
+
+		else {
+
+			let methodName = 'multiDrawElementsInstancedWEBGL';
+
+			extension[ methodName ](mode, counts, 0, type, starts, 0, instances, 0, length);
+
+			let countsTotal = counts.reduce((e,t)=>e + t, 0)
+			let instanceTotal = instances.reduce((e,t)=>e + t, 0)
+
+			info.update( countsTotal, mode, instanceTotal );
+
+		}
 
 	}
 
