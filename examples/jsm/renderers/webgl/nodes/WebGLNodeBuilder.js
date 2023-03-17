@@ -17,6 +17,12 @@ const glslMethods = {
 	[ MathNode.ATAN2 ]: 'atan'
 };
 
+const precisionLib = {
+	low: 'lowp',
+	medium: 'mediump',
+	high: 'highp'
+};
+
 function getIncludeSnippet( name ) {
 
 	return `#include <${name}>`;
@@ -58,18 +64,6 @@ class WebGLNodeBuilder extends NodeBuilder {
 
 	}
 
-	addFlowCode( code ) {
-
-		if ( ! /;\s*$/.test( code ) ) {
-
-			code += ';';
-
-		}
-
-		super.addFlowCode( code + '\n\t' );
-
-	}
-
 	_parseShaderLib() {
 
 		const material = this.material;
@@ -103,7 +97,7 @@ class WebGLNodeBuilder extends NodeBuilder {
 
 		const { material, renderer } = this;
 
-		if ( renderer.toneMappingNode?.isNode === true ) {
+		if ( renderer.toneMappingNode && renderer.toneMappingNode.isNode === true ) {
 
 			this.addSlot( 'fragment', new SlotNode( {
 				node: material.colorNode,
@@ -460,29 +454,45 @@ class WebGLNodeBuilder extends NodeBuilder {
 
 		const uniforms = this.uniforms[ shaderStage ];
 
-		let snippet = '';
+		let output = '';
 
 		for ( const uniform of uniforms ) {
 
+			let snippet = null;
+
 			if ( uniform.type === 'texture' ) {
 
-				snippet += `uniform sampler2D ${uniform.name}; `;
+				snippet = `sampler2D ${uniform.name}; `;
 
 			} else if ( uniform.type === 'cubeTexture' ) {
 
-				snippet += `uniform samplerCube ${uniform.name}; `;
+				snippet = `samplerCube ${uniform.name}; `;
 
 			} else {
 
 				const vectorType = this.getVectorType( uniform.type );
 
-				snippet += `uniform ${vectorType} ${uniform.name}; `;
+				snippet = `${vectorType} ${uniform.name}; `;
 
 			}
 
+			const precision = uniform.node.precision;
+
+			if ( precision !== null ) {
+
+				snippet = 'uniform ' + precisionLib[ precision ] + ' ' + snippet;
+
+			} else {
+
+				snippet = 'uniform ' + snippet;
+
+			}
+
+			output += snippet;
+
 		}
 
-		return snippet;
+		return output;
 
 	}
 

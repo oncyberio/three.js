@@ -18,7 +18,7 @@
 
 	<!-- Import maps polyfill -->
 	<!-- Remove this when import maps will be widely supported -->
-	<script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
+	<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
 
 	<script type="importmap">
 		{
@@ -75,15 +75,16 @@
 			// gui
 
 			gui = new GUI();
-			params = { pixelSize: 6, normalEdgeStrength: .3, depthEdgeStrength: .4 };
+			params = { pixelSize: 6, normalEdgeStrength: .3, depthEdgeStrength: .4, pixelAlignedPanning: true };
 			gui.add( params, 'pixelSize' ).min( 1 ).max( 16 ).step( 1 )
 				.onChange( () => {
 
 					renderPixelatedPass.setPixelSize( params.pixelSize );
-		
+
 				} );
 			gui.add( renderPixelatedPass, 'normalEdgeStrength' ).min( 0 ).max( 2 ).step( .05 );
 			gui.add( renderPixelatedPass, 'depthEdgeStrength' ).min( 0 ).max( 1 ).step( .05 );
+			gui.add( params, 'pixelAlignedPanning' );
 
 			// textures
 
@@ -96,7 +97,7 @@
 			// meshes
 
 			const boxMaterial = new THREE.MeshPhongMaterial( { map: texChecker2 } );
-		
+
 			function addBox( boxSideLength, x, z, rotation ) {
 
 				const mesh = new THREE.Mesh( new THREE.BoxGeometry( boxSideLength, boxSideLength, boxSideLength ), boxMaterial );
@@ -107,7 +108,7 @@
 				mesh.position.set( x, boxSideLength / 2 + .0001, z );
 				scene.add( mesh );
 				return mesh;
-		
+
 			}
 
 			addBox( .4, 0, 0, Math.PI / 4 );
@@ -174,10 +175,28 @@
 			requestAnimationFrame( animate );
 
 			const t = clock.getElapsedTime();
-		
+
 			crystalMesh.material.emissiveIntensity = Math.sin( t * 3 ) * .5 + .5;
 			crystalMesh.position.y = .7 + Math.sin( t * 2 ) * .05;
 			crystalMesh.rotation.y = stopGoEased( t, 2, 4 ) * 2 * Math.PI;
+
+			const rendererSize = renderer.getSize( new THREE.Vector2() );
+			const aspectRatio = rendererSize.x / rendererSize.y;
+			if ( params[ 'pixelAlignedPanning' ] ) {
+
+				pixelAlignFrustum( camera, aspectRatio, Math.floor( rendererSize.x / params[ 'pixelSize' ] ),
+					Math.floor( rendererSize.y / params[ 'pixelSize' ] ) );
+
+			} else if ( camera.left != - aspectRatio || camera.top != 1.0 ) {
+
+				// Reset the Camera Frustum if it has been modified
+				camera.left = - aspectRatio;
+				camera.right = aspectRatio;
+				camera.top = 1.0;
+				camera.bottom = - 1.0;
+				camera.updateProjectionMatrix();
+
+			}
 
 			composer.render();
 
@@ -219,7 +238,40 @@
 			return cycle + linStep;
 
 		}
-		
+
+		function pixelAlignFrustum( camera, aspectRatio, pixelsPerScreenWidth, pixelsPerScreenHeight ) {
+
+			// 0. Get Pixel Grid Units
+			const worldScreenWidth = ( ( camera.right - camera.left ) / camera.zoom );
+			const worldScreenHeight = ( ( camera.top - camera.bottom ) / camera.zoom );
+			const pixelWidth = worldScreenWidth / pixelsPerScreenWidth;
+			const pixelHeight = worldScreenHeight / pixelsPerScreenHeight;
+
+			// 1. Project the current camera position along its local rotation bases
+			const camPos = new THREE.Vector3(); camera.getWorldPosition( camPos );
+			const camRot = new THREE.Quaternion(); camera.getWorldQuaternion( camRot );
+			const camRight = new THREE.Vector3( 1.0, 0.0, 0.0 ).applyQuaternion( camRot );
+			const camUp = new THREE.Vector3( 0.0, 1.0, 0.0 ).applyQuaternion( camRot );
+			const camPosRight = camPos.dot( camRight );
+			const camPosUp = camPos.dot( camUp );
+
+			// 2. Find how far along its position is along these bases in pixel units
+			const camPosRightPx = camPosRight / pixelWidth;
+			const camPosUpPx = camPosUp / pixelHeight;
+
+			// 3. Find the fractional pixel units and convert to world units
+			const fractX = camPosRightPx - Math.round( camPosRightPx );
+			const fractY = camPosUpPx - Math.round( camPosUpPx );
+
+			// 4. Add fractional world units to the left/right top/bottom to align with the pixel grid
+			camera.left = - aspectRatio - ( fractX * pixelWidth );
+			camera.right = aspectRatio - ( fractX * pixelWidth );
+			camera.top = 1.0 - ( fractY * pixelHeight );
+			camera.bottom = - 1.0 - ( fractY * pixelHeight );
+			camera.updateProjectionMatrix();
+
+		}
+
 	</script>
 </body>
 
