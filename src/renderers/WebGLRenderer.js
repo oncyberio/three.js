@@ -1341,7 +1341,6 @@ class WebGLRenderer {
 
 			for ( let i = 0, l = renderList.length; i < l; i ++ ) {
 
-				_this.renderBufferDirect( camera, scene, geometry, material, object, group );
 				const renderItem = renderList[ i ];
 
 				const object = renderItem.object;
@@ -1358,6 +1357,7 @@ class WebGLRenderer {
 			}
 
 		}
+
 
 		function renderObject( object, scene, camera, geometry, material, group ) {
 
