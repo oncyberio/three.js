@@ -8299,7 +8299,7 @@ class Material extends EventDispatcher {
 
 		this.alphaToCoverage = false;
 		this.premultipliedAlpha = false;
-		this.forceSinglePass = false;
+		this.forceSinglePass = true;
 
 		this.visible = true;
 

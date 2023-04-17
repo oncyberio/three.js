@@ -8304,7 +8304,7 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 
 			this.alphaToCoverage = false;
 			this.premultipliedAlpha = false;
-			this.forceSinglePass = false;
+			this.forceSinglePass = true;
 
 			this.visible = true;
 
