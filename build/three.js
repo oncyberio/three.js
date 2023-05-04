@@ -29225,6 +29225,7 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 						material.isMeshPhongMaterial ||
 						material.isMeshToonMaterial ||
 						material.isMeshStandardMaterial ||
+						material.fog || 
 						material.envMap ) {
 
 						const uCamPos = p_uniforms.map.cameraPosition;

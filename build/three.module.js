@@ -29218,6 +29218,7 @@ class WebGLRenderer {
 					material.isMeshPhongMaterial ||
 					material.isMeshToonMaterial ||
 					material.isMeshStandardMaterial ||
+					material.fog || 
 					material.envMap ) {
 
 					const uCamPos = p_uniforms.map.cameraPosition;
