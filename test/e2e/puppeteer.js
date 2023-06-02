@@ -62,11 +62,7 @@ const exceptionList = [
 	'webgl_camera_logarithmicdepthbuffer',
 	'webgl_effects_ascii',
 	'webgl_loader_pdb',
-	'webgl_multiple_canvases_circle',
 	'webgl_multiple_elements_text',
-	'webgl_nodes_playground',
-	'webgl_shaders_tonemapping',
-	'webgpu_nodes_playground',
 
 	// Unknown
 	// TODO: most of these can be fixed just by increasing idleTime and parseTime
@@ -74,7 +70,6 @@ const exceptionList = [
 	'webgl_buffergeometry_glbufferattribute',
 	'webgl_clipping_advanced',
 	'webgl_lensflares',
-	'webgl_lines_sphere',
 	'webgl_lights_spotlights',
 	'webgl_loader_imagebitmap',
 	'webgl_loader_texture_lottie',
@@ -90,13 +85,45 @@ const exceptionList = [
 	'webgl_shadowmap',
 	'webgl_shadowmap_progressive',
 	'webgl_test_memory2',
-	'webgl_tiled_forward'
+	'webgl_tiled_forward',
+
+	// TODO: implement determinism for setTimeout and setInterval
+	// could it fix some examples from above?
+	'physics_rapier_instancing',
+
+	// Awaiting for WebGPU support
+	'webgpu_audio_processing',
+	'webgpu_backdrop',
+	'webgpu_compute',
+	'webgpu_cubemap_adjustments',
+	'webgpu_cubemap_dynamic',
+	'webgpu_cubemap_mix',
+	'webgpu_depth_texture',
+	'webgpu_equirectangular',
+	'webgpu_instance_mesh',
+	'webgpu_instance_uniform',
+	'webgpu_lights_custom',
+	'webgpu_lights_ies_spotlight',
+	'webgpu_lights_phong',
+	'webgpu_lights_selective',
+	'webgpu_loader_gltf',
+	'webgpu_loader_gltf_compressed',
+	'webgpu_materials',
+	'webgpu_materials_video',
+	'webgpu_particles',
+	'webgpu_rtt',
+	'webgpu_sandbox',
+	'webgpu_shadowmap',
+	'webgpu_skinning',
+	'webgpu_skinning_instancing',
+	'webgpu_skinning_points',
+	'webgpu_sprites'
 
 ];
 
 /* CONFIG VARIABLES END */
 
-const chromiumRevision = '1095492'; // Chromium 111.0.5556.0, Puppeteer 19.7.0, https://github.com/puppeteer/puppeteer/releases/tag/puppeteer-core-v19.7.0
+const chromiumRevision = '1108766'; // Chromium 112.0.5614.0, Puppeteer 19.8.0, https://github.com/puppeteer/puppeteer/releases/tag/puppeteer-core-v19.8.0
 
 const port = 1234;
 const pixelThreshold = 0.1; // threshold error in one pixel
@@ -195,7 +222,8 @@ async function main() {
 		headless: ! process.env.VISIBLE,
 		args: flags,
 		defaultViewport: viewport,
-		handleSIGINT: false
+		handleSIGINT: false,
+		protocolTimeout: 0
 	} );
 
 	// this line is intended to stop the script if the browser (in headful mode) is closed by user (while debugging)

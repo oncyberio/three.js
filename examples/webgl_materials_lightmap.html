@@ -57,7 +57,7 @@
 
 				// LIGHTS
 
-				const light = new THREE.DirectionalLight( 0xaabbff, 0.3 );
+				const light = new THREE.DirectionalLight( 0xd5deff, 0.3 );
 				light.position.x = 300;
 				light.position.y = 250;
 				light.position.z = - 500;
@@ -65,8 +65,8 @@
 
 				// SKYDOME
 
-				const topColor = new THREE.Color().copy( light.color ).convertSRGBToLinear();
-				const bottomColor = new THREE.Color( 0xffffff ).convertSRGBToLinear();
+				const topColor = new THREE.Color().copy( light.color );
+				const bottomColor = new THREE.Color( 0xffffff );
 				const offset = 400;
 				const exponent = 0.6;
 
@@ -85,7 +85,6 @@
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( innerWidth, innerHeight );
 				container.appendChild( renderer.domElement );
-				renderer.outputEncoding = THREE.sRGBEncoding;
 
 				// CONTROLS
 

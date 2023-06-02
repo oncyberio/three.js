@@ -5,19 +5,33 @@ import NodeVar from './NodeVar.js';
 import NodeCode from './NodeCode.js';
 import NodeKeywords from './NodeKeywords.js';
 import NodeCache from './NodeCache.js';
+import { createNodeMaterialFromType } from '../materials/NodeMaterial.js';
 import { NodeUpdateType, defaultBuildStages, shaderStages } from './constants.js';
 
-import { REVISION, LinearEncoding, Color, Vector2, Vector3, Vector4 } from 'three';
+import { REVISION, NoColorSpace, LinearEncoding, sRGBEncoding, SRGBColorSpace, Color, Vector2, Vector3, Vector4, Float16BufferAttribute } from 'three';
 
 import { stack } from './StackNode.js';
 import { maxMipLevel } from '../utils/MaxMipLevelNode.js';
 
-const typeFromLength = new Map();
-typeFromLength.set( 2, 'vec2' );
-typeFromLength.set( 3, 'vec3' );
-typeFromLength.set( 4, 'vec4' );
-typeFromLength.set( 9, 'mat3' );
-typeFromLength.set( 16, 'mat4' );
+const typeFromLength = new Map( [
+	[ 2, 'vec2' ],
+	[ 3, 'vec3' ],
+	[ 4, 'vec4' ],
+	[ 9, 'mat3' ],
+	[ 16, 'mat4' ]
+] );
+
+const typeFromArray = new Map( [
+	[ Int8Array, 'int' ],
+	[ Int16Array, 'int' ],
+	[ Int32Array, 'int' ],
+	[ Uint8Array, 'uint' ],
+	[ Uint16Array, 'uint' ],
+	[ Uint32Array, 'uint' ],
+	[ Float32Array, 'float' ]
+] );
+
+const isNonPaddingElementArray = new Set( [ Int32Array, Uint32Array, Float32Array ] );
 
 const toFloat = ( value ) => {
 
@@ -32,18 +46,20 @@ class NodeBuilder {
 	constructor( object, renderer, parser ) {
 
 		this.object = object;
-		this.material = object.material || null;
-		this.geometry = object.geometry || null;
+		this.material = object && ( object.material || null );
+		this.geometry = object && ( object.geometry || null );
 		this.renderer = renderer;
 		this.parser = parser;
 
 		this.nodes = [];
 		this.updateNodes = [];
+		this.updateBeforeNodes = [];
 		this.hashNodes = {};
 
-		this.scene = null;
 		this.lightsNode = null;
+		this.environmentNode = null;
 		this.fogNode = null;
+		this.toneMappingNode = null;
 
 		this.vertexShader = null;
 		this.fragmentShader = null;
@@ -53,7 +69,11 @@ class NodeBuilder {
 		this.flowCode = { vertex: '', fragment: '', compute: [] };
 		this.uniforms = { vertex: [], fragment: [], compute: [], index: 0 };
 		this.codes = { vertex: [], fragment: [], compute: [] };
+		this.bindings = { vertex: [], fragment: [], compute: [] };
+		this.bindingsOffset = { vertex: 0, fragment: 0, compute: 0 };
+		this.bindingsArray = null;
 		this.attributes = [];
+		this.bufferAttributes = [];
 		this.varyings = [];
 		this.vars = { vertex: [], fragment: [], compute: [] };
 		this.flow = { code: '' };
@@ -63,7 +83,7 @@ class NodeBuilder {
 
 		this.context = {
 			keywords: new NodeKeywords(),
-			material: object.material,
+			material: this.material,
 			getMIPLevelAlgorithmNode: ( textureNode, levelNode ) => levelNode.mul( maxMipLevel( textureNode ) )
 		};
 
@@ -77,6 +97,22 @@ class NodeBuilder {
 
 	}
 
+	getBindings() {
+
+		let bindingsArray = this.bindingsArray;
+
+		if ( bindingsArray === null ) {
+
+			const bindings = this.bindings;
+
+			this.bindingsArray = bindingsArray = ( this.material !== null ) ? [ ...bindings.vertex, ...bindings.fragment ] : bindings.compute;
+
+		}
+
+		return bindingsArray;
+
+	}
+
 	setHashNode( node, hash ) {
 
 		this.hashNodes[ hash ] = node;
@@ -87,11 +123,18 @@ class NodeBuilder {
 
 		if ( this.nodes.indexOf( node ) === - 1 ) {
 
-			const updateType = node.getUpdateType( this );
+			const updateType = node.getUpdateType();
+			const updateBeforeType = node.getUpdateBeforeType();
 
 			if ( updateType !== NodeUpdateType.NONE ) {
 
 				this.updateNodes.push( node );
+
+			}
+
+			if ( updateBeforeType !== NodeUpdateType.NONE ) {
+
+				this.updateBeforeNodes.push( node );
 
 			}
 
@@ -209,25 +252,13 @@ class NodeBuilder {
 
 	}
 
-	getTexture( /* textureProperty, uvSnippet */ ) {
+	getTexture( /* texture, textureProperty, uvSnippet */ ) {
 
 		console.warn( 'Abstract function.' );
 
 	}
 
-	getTextureLevel( /* textureProperty, uvSnippet, levelSnippet */ ) {
-
-		console.warn( 'Abstract function.' );
-
-	}
-
-	getCubeTexture( /* textureProperty, uvSnippet */ ) {
-
-		console.warn( 'Abstract function.' );
-
-	}
-
-	getCubeTextureLevel( /* textureProperty, uvSnippet, levelSnippet */ ) {
+	getTextureLevel( /* texture, textureProperty, uvSnippet, levelSnippet */ ) {
 
 		console.warn( 'Abstract function.' );
 
@@ -270,6 +301,10 @@ class NodeBuilder {
 		} else if ( typeLength === 4 ) {
 
 			return `${ this.getType( type ) }( ${ getConst( value.x ) }, ${ getConst( value.y ) }, ${ getConst( value.z ) }, ${ getConst( value.w ) } )`;
+
+		} else if ( typeLength > 4 && value && ( value.isMatrix3 || value.isMatrix4 ) ) {
+
+			return `${ this.getType( type ) }( ${ value.elements.map( getConst ).join( ', ' ) } )`;
 
 		} else if ( typeLength > 4 ) {
 
@@ -349,31 +384,33 @@ class NodeBuilder {
 
 	}
 
-	isShaderStage( shaderStage ) {
+	/** @deprecated, r152 */
+	getTextureEncodingFromMap( map ) {
 
-		return this.shaderStage === shaderStage;
+		console.warn( 'THREE.NodeBuilder: Method .getTextureEncodingFromMap replaced by .getTextureColorSpaceFromMap in r152+.' );
+		return this.getTextureColorSpaceFromMap( map ) === SRGBColorSpace ? sRGBEncoding : LinearEncoding;
 
 	}
 
-	getTextureEncodingFromMap( map ) {
+	getTextureColorSpaceFromMap( map ) {
 
-		let encoding;
+		let colorSpace;
 
 		if ( map && map.isTexture ) {
 
-			encoding = map.encoding;
+			colorSpace = map.colorSpace;
 
 		} else if ( map && map.isWebGLRenderTarget ) {
 
-			encoding = map.texture.encoding;
+			colorSpace = map.texture.colorSpace;
 
 		} else {
 
-			encoding = LinearEncoding;
+			colorSpace = NoColorSpace;
 
 		}
 
-		return encoding;
+		return colorSpace;
 
 	}
 
@@ -407,9 +444,39 @@ class NodeBuilder {
 	getTypeFromLength( length, componentType = 'float' ) {
 
 		if ( length === 1 ) return componentType;
+
 		const baseType = typeFromLength.get( length );
 		const prefix = componentType === 'float' ? '' : componentType[ 0 ];
+
 		return prefix + baseType;
+
+	}
+
+	getTypeFromArray( array ) {
+
+		return typeFromArray.get( array.constructor );
+
+	}
+
+	getTypeFromAttribute( attribute ) {
+
+		let dataAttribute = attribute;
+
+		if ( attribute.isInterleavedBufferAttribute ) dataAttribute = attribute.data;
+
+		const array = dataAttribute.array;
+		const itemSize = isNonPaddingElementArray.has( array.constructor ) ? attribute.itemSize : dataAttribute.stride || attribute.itemSize;
+		const normalized = attribute.normalized;
+
+		let arrayType;
+
+		if ( ! ( attribute instanceof Float16BufferAttribute ) && normalized !== true ) {
+
+			arrayType = this.getTypeFromArray( array );
+
+		}
+
+		return this.getTypeFromLength( itemSize, arrayType );
 
 	}
 
@@ -493,7 +560,29 @@ class NodeBuilder {
 
 	}
 
-	getUniformFromNode( node, shaderStage, type ) {
+	getBufferAttributeFromNode( node, type ) {
+
+		const nodeData = this.getDataFromNode( node );
+
+		let bufferAttribute = nodeData.bufferAttribute;
+
+		if ( bufferAttribute === undefined ) {
+
+			const index = this.uniforms.index ++;
+
+			bufferAttribute = new NodeAttribute( 'nodeAttribute' + index, type, node );
+
+			this.bufferAttributes.push( bufferAttribute );
+
+			nodeData.bufferAttribute = bufferAttribute;
+
+		}
+
+		return bufferAttribute;
+
+	}
+
+	getUniformFromNode( node, type, shaderStage = this.shaderStage ) {
 
 		const nodeData = this.getDataFromNode( node, shaderStage );
 
@@ -672,7 +761,7 @@ class NodeBuilder {
 
 		if ( propertyName !== null ) {
 
-			flowData.code += `${propertyName} = ${flowData.result};\n` + this.tab;
+			flowData.code += `${ this.tab + propertyName } = ${ flowData.result };\n`;
 
 		}
 
@@ -681,6 +770,12 @@ class NodeBuilder {
 		this.setShaderStage( previousShaderStage );
 
 		return flowData;
+
+	}
+
+	getAttributesArray() {
+
+		return this.attributes.concat( this.bufferAttributes );
 
 	}
 
@@ -696,6 +791,12 @@ class NodeBuilder {
 
 	}
 
+	getVar( type, name ) {
+
+		return `${type} ${name}`;
+
+	}
+
 	getVars( shaderStage ) {
 
 		let snippet = '';
@@ -704,7 +805,7 @@ class NodeBuilder {
 
 		for ( const variable of vars ) {
 
-			snippet += `${variable.type} ${variable.name}; `;
+			snippet += `${ this.getVar( variable.type, variable.name ) }; `;
 
 		}
 
@@ -821,6 +922,12 @@ class NodeBuilder {
 
 	}
 
+	createNodeMaterial( type ) {
+
+		return createNodeMaterialFromType( type );
+
+	}
+
 	format( snippet, fromType, toType ) {
 
 		fromType = this.getVectorType( fromType );
@@ -859,7 +966,7 @@ class NodeBuilder {
 
 		if ( fromTypeLength > toTypeLength ) {
 
-			return this.format( `${ snippet }.${ 'xyz'.slice( 0, toTypeLength ) }`, this.getTypeFromLength( toTypeLength ), toType );
+			return this.format( `${ snippet }.${ 'xyz'.slice( 0, toTypeLength ) }`, this.getTypeFromLength( toTypeLength, this.getComponentType( fromType ) ), toType );
 
 		}
 

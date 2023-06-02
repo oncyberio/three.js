@@ -72,10 +72,10 @@
 
 				// light
 
-				const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x000000, 1 );
-				scene.add( hemiLight );
+				const ambientLight = new THREE.AmbientLight( 0xffffff, 0.4 );
+				scene.add( ambientLight );
 
-				const dirLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+				const dirLight = new THREE.DirectionalLight( 0xffffff, 0.6 );
 				dirLight.position.set( 200, 200, 200 );
 				scene.add( dirLight );
 

@@ -72,11 +72,11 @@
 				camera.position.z = 1200;
 
 				scene = new THREE.Scene();
-				scene.background = new THREE.Color( 0x111111 );
+				scene.background = new THREE.Color( 0x494949 );
 
 				// LIGHTS
 
-				ambientLight = new THREE.AmbientLight( 0x444444 );
+				ambientLight = new THREE.AmbientLight( 0x8d8d8d );
 				scene.add( ambientLight );
 
 				pointLight = new THREE.PointLight( 0xffffff, 2, 1000 );
@@ -91,15 +91,15 @@
 				const textureLoader = new THREE.TextureLoader();
 
 				const diffuseMap = textureLoader.load( 'models/gltf/LeePerrySmith/Map-COL.jpg' );
-				diffuseMap.encoding = THREE.sRGBEncoding;
+				diffuseMap.colorSpace = THREE.SRGBColorSpace;
 
 				const specularMap = textureLoader.load( 'models/gltf/LeePerrySmith/Map-SPEC.jpg' );
-				specularMap.encoding = THREE.sRGBEncoding;
+				specularMap.colorSpace = THREE.SRGBColorSpace;
 
 				const normalMap = textureLoader.load( 'models/gltf/LeePerrySmith/Infinite-Level_02_Tangent_SmoothUV.jpg' );
 
 				const material = new THREE.MeshPhongMaterial( {
-					color: 0xdddddd,
+					color: 0xefefef,
 					specular: 0x222222,
 					shininess: 35,
 					map: diffuseMap,

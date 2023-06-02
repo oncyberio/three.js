@@ -48,8 +48,6 @@
 
 			let groundMirror, verticalMirror;
 
-			THREE.ColorManagement.enabled = true;
-
 			init();
 			animate();
 
@@ -140,7 +138,7 @@
 				planeBottom.rotateX( - Math.PI / 2 );
 				scene.add( planeBottom );
 
-				const planeFront = new THREE.Mesh( planeGeo, new THREE.MeshPhongMaterial( { color: 0xbbbbfe } ) );
+				const planeFront = new THREE.Mesh( planeGeo, new THREE.MeshPhongMaterial( { color: 0x7f7fff } ) );
 				planeFront.position.z = 50;
 				planeFront.position.y = 50;
 				planeFront.rotateY( Math.PI );

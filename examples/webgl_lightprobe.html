@@ -61,7 +61,6 @@
 				// tone mapping
 				renderer.toneMapping = THREE.NoToneMapping;
 
-				renderer.outputEncoding = THREE.sRGBEncoding;
 
 				// scene
 				scene = new THREE.Scene();
@@ -100,8 +99,6 @@
 				const urls = genCubeUrls( 'textures/cube/pisa/', '.png' );
 
 				new THREE.CubeTextureLoader().load( urls, function ( cubeTexture ) {
-
-					cubeTexture.encoding = THREE.sRGBEncoding;
 
 					scene.background = cubeTexture;
 
