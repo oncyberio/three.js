@@ -26,9 +26,7 @@ class RenderObjects extends ChainMap {
 
 		if ( renderObject === undefined ) {
 
-			renderObject = new RenderObject( this.nodes, this.geometries, this.renderer, object, material, scene, camera, lightsNode );
-
-			this._initRenderObject( renderObject );
+			renderObject = this.createRenderObject( this.nodes, this.geometries, this.renderer, object, material, scene, camera, lightsNode );
 
 			this.set( chainArray, renderObject );
 
@@ -39,10 +37,9 @@ class RenderObjects extends ChainMap {
 
 			if ( data.cacheKey !== cacheKey ) {
 
-				data.cacheKey = cacheKey;
+				renderObject.dispose();
 
-				this.pipelines.delete( renderObject );
-				this.nodes.delete( renderObject );
+				renderObject = this.get( object, material, scene, camera, lightsNode );
 
 			}
 
@@ -60,29 +57,25 @@ class RenderObjects extends ChainMap {
 
 	}
 
-	_initRenderObject( renderObject ) {
+	createRenderObject( nodes, geometries, renderer, object, material, scene, camera, lightsNode ) {
+
+		const renderObject = new RenderObject( nodes, geometries, renderer, object, material, scene, camera, lightsNode );
 
 		const data = this.dataMap.get( renderObject );
+		data.cacheKey = renderObject.getCacheKey();
 
-		if ( data.initialized !== true ) {
+		renderObject.onDispose = () => {
 
-			data.initialized = true;
-			data.cacheKey = renderObject.getCacheKey();
+			this.dataMap.delete( renderObject );
 
-			const onDispose = () => {
+			this.pipelines.delete( renderObject );
+			this.nodes.delete( renderObject );
 
-				renderObject.material.removeEventListener( 'dispose', onDispose );
+			this.delete( renderObject.getChainArray() );
 
-				this.pipelines.delete( renderObject );
-				this.nodes.delete( renderObject );
+		};
 
-				this.delete( renderObject.getChainArray() );
-
-			};
-
-			renderObject.material.addEventListener( 'dispose', onDispose );
-
-		}
+		return renderObject;
 
 	}
 

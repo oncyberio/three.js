@@ -307,6 +307,8 @@
 	"webgpu": [
 		"webgpu_audio_processing",
 		"webgpu_backdrop",
+		"webgpu_backdrop_area",
+		"webgpu_clearcoat",
 		"webgpu_compute",
 		"webgpu_cubemap_adjustments",
 		"webgpu_cubemap_dynamic",
@@ -323,6 +325,7 @@
 		"webgpu_loader_gltf_compressed",
 		"webgpu_materials",
 		"webgpu_materials_video",
+		"webgpu_morphtargets",
 		"webgpu_particles",
 		"webgpu_rtt",
 		"webgpu_sandbox",
@@ -330,7 +333,9 @@
 		"webgpu_skinning",
 		"webgpu_skinning_instancing",
 		"webgpu_skinning_points",
-		"webgpu_sprites"
+		"webgpu_sprites",
+		"webgpu_tsl_editor",
+		"webgpu_video_panorama"
 	],
 	"webaudio": [
 		"webaudio_orientation",

@@ -296,7 +296,7 @@ class WebGLRenderer {
 
 			}
 
-			if ( _gl instanceof WebGLRenderingContext ) { // @deprecated, r153
+			if ( typeof WebGLRenderingContext !== 'undefined' && _gl instanceof WebGLRenderingContext ) { // @deprecated, r153
 
 				console.warn( 'THREE.WebGLRenderer: WebGL 1 support was deprecated in r153 and will be removed in r163.' );
 
@@ -614,15 +614,13 @@ class WebGLRenderer {
 					const g = clearColor.g;
 					const b = clearColor.b;
 
-					const __webglFramebuffer = properties.get( _currentRenderTarget ).__webglFramebuffer;
-
 					if ( isUnsignedType ) {
 
 						uintClearColor[ 0 ] = r;
 						uintClearColor[ 1 ] = g;
 						uintClearColor[ 2 ] = b;
 						uintClearColor[ 3 ] = a;
-						_gl.clearBufferuiv( _gl.COLOR, __webglFramebuffer, uintClearColor );
+						_gl.clearBufferuiv( _gl.COLOR, 0, uintClearColor );
 
 					} else {
 
@@ -630,7 +628,7 @@ class WebGLRenderer {
 						intClearColor[ 1 ] = g;
 						intClearColor[ 2 ] = b;
 						intClearColor[ 3 ] = a;
-						_gl.clearBufferiv( _gl.COLOR, __webglFramebuffer, intClearColor );
+						_gl.clearBufferiv( _gl.COLOR, 0, intClearColor );
 
 					}
 
@@ -1110,6 +1108,8 @@ class WebGLRenderer {
 			//
 
 			this.currentRenderList = currentRenderList
+			
+			this.info.render.frame ++;
 
 			if ( _clippingEnabled === true ) clipping.beginShadows();
 
@@ -1123,7 +1123,6 @@ class WebGLRenderer {
 
 			if ( this.info.autoReset === true ) this.info.reset();
 
-			this.info.render.frame ++;
 
 			//
 
@@ -1252,19 +1251,6 @@ class WebGLRenderer {
 				} else if ( object.isMesh || object.isLine || object.isPoints ) {
 
 					if ( ! object.frustumCulled || _frustum.intersectsObject( object ) ) {
-
-						if ( object.isSkinnedMesh ) {
-
-							// update skeleton only once in a frame
-
-							if ( object.skeleton.frame !== info.render.frame ) {
-
-								object.skeleton.update();
-								object.skeleton.frame = info.render.frame;
-
-							}
-
-						}
 
 						const geometry = objects.update( object );
 						const material = object.material;
