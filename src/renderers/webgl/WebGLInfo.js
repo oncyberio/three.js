@@ -7,6 +7,7 @@ function WebGLInfo( gl ) {
 
 	const render = {
 		frame: 0,
+		manualFrame: 0,
 		calls: 0,
 		triangles: 0,
 		points: 0,
@@ -50,6 +51,7 @@ function WebGLInfo( gl ) {
 	function reset() {
 
 		render.calls = 0;
+		render.manualFrame = 0;
 		render.triangles = 0;
 		render.points = 0;
 		render.lines = 0;

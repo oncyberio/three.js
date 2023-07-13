@@ -4,7 +4,11 @@ function WebGLObjects( gl, geometries, attributes, info ) {
 
 	function update( object ) {
 
-		const frame = info.render.frame;
+		// samsy
+
+		// const frame = info.render.frame;
+
+		const frame = info.render.manualFrame;
 
 		const geometry = object.geometry;
 		const buffergeometry = geometries.get( object, geometry );

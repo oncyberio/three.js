@@ -17481,6 +17481,7 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 
 		const render = {
 			frame: 0,
+			manualFrame: 0,
 			calls: 0,
 			triangles: 0,
 			points: 0,
@@ -17524,6 +17525,7 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 		function reset() {
 
 			render.calls = 0;
+			render.manualFrame = 0;
 			render.triangles = 0;
 			render.points = 0;
 			render.lines = 0;
@@ -17840,7 +17842,11 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 
 		function update( object ) {
 
-			const frame = info.render.frame;
+			// samsy
+
+			// const frame = info.render.frame;
+
+			const frame = info.render.manualFrame;
 
 			const geometry = object.geometry;
 			const buffergeometry = geometries.get( object, geometry );
