@@ -17525,7 +17525,6 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 		function reset() {
 
 			render.calls = 0;
-			render.manualFrame = 0;
 			render.triangles = 0;
 			render.points = 0;
 			render.lines = 0;
