@@ -51,7 +51,6 @@ function WebGLInfo( gl ) {
 	function reset() {
 
 		render.calls = 0;
-		render.manualFrame = 0;
 		render.triangles = 0;
 		render.points = 0;
 		render.lines = 0;
