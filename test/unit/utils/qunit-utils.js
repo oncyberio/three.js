@@ -56,6 +56,21 @@ QUnit.assert.equalKey = function ( obj, ref, key ) {
 
 };
 
+QUnit.assert.xyzEqual = function ( actual, expected, message ) {
+
+	
+
+	message = message || ( actual + ' should be equal to ' + expected );
+	
+	this.pushResult( {
+		result: actual.x == expected.x && actual.y == expected.y && actual.z == expected.z,
+		actual: actual,
+		expected: expected,
+		message: message
+	} );
+
+};
+
 QUnit.assert.smartEqual = function ( actual, expected, message ) {
 
 	const cmp = new SmartComparer();
@@ -71,6 +86,7 @@ QUnit.assert.smartEqual = function ( actual, expected, message ) {
 	} );
 
 };
+
 
 //
 //	GEOMETRY TEST HELPERS

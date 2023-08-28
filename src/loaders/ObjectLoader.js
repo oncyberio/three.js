@@ -966,6 +966,8 @@ class ObjectLoader extends Loader {
 
 		}
 
+		object.matrixNeedsUpdate = data.matrixNeedsUpdate;
+
 		if ( data.up !== undefined ) object.up.fromArray( data.up );
 
 		if ( data.castShadow !== undefined ) object.castShadow = data.castShadow;

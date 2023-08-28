@@ -7112,6 +7112,68 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 	const _addedEvent = { type: 'added' };
 	const _removedEvent = { type: 'removed' };
 
+
+	class ObsVector3 extends Vector3 {
+
+		constructor( x = 0, y = 0, z = 0 ) {
+
+			super( x, y, z );
+
+			this._x = x;
+			this._y = y;
+			this._z = z;
+
+		}
+
+		get x() {
+			
+			return this._x;
+		}
+
+		set x( value ) {
+
+			this._x = value;
+			this._onChangeCallback();
+
+		}
+
+		get y() {
+
+			return this._y;
+
+		}
+
+		set y( value ) {
+
+			this._y = value;
+			this._onChangeCallback();
+
+		}
+
+		get z() {
+
+			return this._z;
+
+		}
+
+		set z( value ) {
+
+			this._z = value;
+			this._onChangeCallback();
+		}
+
+
+		_onChange( callback ) {
+
+			this._onChangeCallback = callback;
+
+			return this;
+
+		}
+
+		_onChangeCallback() {}
+	}
+
 	class Object3D extends EventDispatcher {
 
 		constructor() {
@@ -7132,14 +7194,27 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 
 			this.up = Object3D.DEFAULT_UP.clone();
 
-			const position = new Vector3();
+			const position = new ObsVector3();
 			const rotation = new Euler();
 			const quaternion = new Quaternion();
-			const scale = new Vector3( 1, 1, 1 );
+			const scale = new ObsVector3( 1, 1, 1 );
+
+			const scope = this;		
+
+			function onMatChange() {
+
+				if (scope.matrixNeedsUpdate) return;
+
+				scope.matrixNeedsUpdate = true;
+
+				if (scope.parent) scope.parent._markChildrenDirty();
+			}
 
 			function onRotationChange() {
 
 				quaternion.setFromEuler( rotation, false );
+
+				onMatChange();
 
 			}
 
@@ -7147,10 +7222,13 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 
 				rotation.setFromQuaternion( quaternion, undefined, false );
 
+				onMatChange();
 			}
 
+			position._onChange( onMatChange );
 			rotation._onChange( onRotationChange );
 			quaternion._onChange( onQuaternionChange );
+			scale._onChange( onMatChange );
 
 			Object.defineProperties( this, {
 				position: {
@@ -7186,6 +7264,8 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 
 			this.matrixAutoUpdate = Object3D.DEFAULT_MATRIX_AUTO_UPDATE;
 			this.matrixWorldNeedsUpdate = false;
+			this.matrixNeedsUpdate = false;
+			this.childrenNeedsUpdate = false;
 
 			this.matrixWorldAutoUpdate = Object3D.DEFAULT_MATRIX_WORLD_AUTO_UPDATE; // checked by the renderer
 
@@ -7202,6 +7282,18 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 
 			this.userData = {};
 
+		}
+
+		_markChildrenDirty() {
+
+			let current = this;
+
+			while (current && !current.childrenNeedsUpdate) {
+
+				current.childrenNeedsUpdate = true;
+
+				current = current.parent;
+			}
 		}
 
 		onBeforeRender( /* renderer, scene, camera, geometry, material, group */ ) {}
@@ -7421,6 +7513,9 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 
 				object.parent = this;
 				this.children.push( object );
+
+				object.matrixWorldNeedsUpdate = true;
+				this._markChildrenDirty();
 
 				object.dispatchEvent( _addedEvent );
 
@@ -7665,9 +7760,14 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 
 		updateMatrix() {
 
-			this.matrix.compose( this.position, this.quaternion, this.scale );
+			if (this.matrixNeedsUpdate ) {
 
-			this.matrixWorldNeedsUpdate = true;
+				this.matrix.compose( this.position, this.quaternion, this.scale );
+			
+				this.matrixWorldNeedsUpdate = true;
+		
+				this.matrixNeedsUpdate = false;
+			}
 
 		}
 
@@ -7695,18 +7795,23 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 
 			// update children
 
-			const children = this.children;
+			if(this.childrenNeedsUpdate || force) {
 
-			for ( let i = 0, l = children.length; i < l; i ++ ) {
+				const children = this.children;
 
-				const child = children[ i ];
+				for ( let i = 0, l = children.length; i < l; i ++ ) {
 
-				if ( child.matrixWorldAutoUpdate === true || force === true ) {
+					const child = children[ i ];
 
-					child.updateMatrixWorld( force );
+					if ( child.matrixWorldAutoUpdate === true || force === true ) {
+
+						child.updateMatrixWorld( force );
+
+					}
 
 				}
 
+				this.childrenNeedsUpdate = false;
 			}
 
 		}
@@ -7733,6 +7838,8 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 
 			}
 
+			this.matrixWorldNeedsUpdate = false;
+
 			// update children
 
 			if ( updateChildren === true ) {
@@ -7750,6 +7857,8 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 					}
 
 				}
+
+				this.childrenNeedsUpdate = false;
 
 			}
 
@@ -7807,6 +7916,8 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 			object.up = this.up.toArray();
 
 			if ( this.matrixAutoUpdate === false ) object.matrixAutoUpdate = false;
+
+			object.matrixNeedsUpdate = this.matrixNeedsUpdate;
 
 			// object specific properties
 
@@ -8020,6 +8131,8 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 
 			this.matrixAutoUpdate = source.matrixAutoUpdate;
 			this.matrixWorldNeedsUpdate = source.matrixWorldNeedsUpdate;
+			this.matrixNeedsUpdate = source.matrixNeedsUpdate;
+			this.childrenNeedsUpdate = source.childrenNeedsUpdate;
 
 			this.matrixWorldAutoUpdate = source.matrixWorldAutoUpdate;
 
@@ -45534,6 +45647,8 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 				if ( data.scale !== undefined ) object.scale.fromArray( data.scale );
 
 			}
+
+			object.matrixNeedsUpdate = data.matrixNeedsUpdate;
 
 			if ( data.up !== undefined ) object.up.fromArray( data.up );
 
