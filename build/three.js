@@ -7516,7 +7516,7 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 				this.children.push( object );
 
 				object.matrixWorldNeedsUpdate = true;
-				this._markDirty();
+				object._markDirty();
 
 				object.dispatchEvent( _addedEvent );
 

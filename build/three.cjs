@@ -7511,7 +7511,7 @@ class Object3D extends EventDispatcher {
 			this.children.push( object );
 
 			object.matrixWorldNeedsUpdate = true;
-			this._markDirty();
+			object._markDirty();
 
 			object.dispatchEvent( _addedEvent );
 
