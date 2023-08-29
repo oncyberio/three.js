@@ -1240,7 +1240,12 @@ export default QUnit.module( 'Core', () => {
 			child.matrixWorldAutoUpdate = false;
 
 			child.matrixWorld.identity();
+			child.matrix.identity();
+			child.matrix.decompose( child.position, child.quaternion, child.scale );
+
 			parent.matrixWorld.identity();
+			parent.matrix.identity();
+			parent.matrix.decompose( parent.position, parent.quaternion, parent.scale );
 
 			object.updateWorldMatrix( true, true );
 
