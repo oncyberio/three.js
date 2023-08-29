@@ -7207,7 +7207,7 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 
 				scope.matrixNeedsUpdate = true;
 
-				if (scope.parent) scope.parent._markChildrenDirty();
+				scope._markDirty();
 			}
 
 			function onRotationChange() {
@@ -7266,6 +7266,7 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 			this.matrixWorldNeedsUpdate = false;
 			this.matrixNeedsUpdate = false;
 			this.childrenNeedsUpdate = false;
+			this.childrenDirty = false;
 
 			this.matrixWorldAutoUpdate = Object3D.DEFAULT_MATRIX_WORLD_AUTO_UPDATE; // checked by the renderer
 
@@ -7284,13 +7285,13 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 
 		}
 
-		_markChildrenDirty() {
+		_markDirty() {
 
-			let current = this;
+			let current = this.parent;
 
-			while (current && !current.childrenNeedsUpdate) {
+			while (current && !current.childrenDirty) {
 
-				current.childrenNeedsUpdate = true;
+				current.childrenDirty = true;
 
 				current = current.parent;
 			}
@@ -7515,7 +7516,7 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 				this.children.push( object );
 
 				object.matrixWorldNeedsUpdate = true;
-				this._markChildrenDirty();
+				this._markDirty();
 
 				object.dispatchEvent( _addedEvent );
 
@@ -7771,31 +7772,36 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 
 		}
 
-		updateMatrixWorld( force ) {
+		_updateOwnMatrixWorld( force ) {
 
 			if ( this.matrixAutoUpdate ) this.updateMatrix();
-
+			
 			if ( this.matrixWorldNeedsUpdate || force ) {
 
 				if ( this.parent === null ) {
 
 					this.matrixWorld.copy( this.matrix );
-
-				} else {
+				}
+				else {
 
 					this.matrixWorld.multiplyMatrices( this.parent.matrixWorld, this.matrix );
-
 				}
 
 				this.matrixWorldNeedsUpdate = false;
 
-				force = true;
-
+				this.childrenNeedsUpdate = true;
 			}
+		}
+
+		updateMatrixWorld( force ) {
+
+			this._updateOwnMatrixWorld( force );
+
+			force = force || this.childrenNeedsUpdate;
 
 			// update children
 
-			if(this.childrenNeedsUpdate || force) {
+			if(this.childrenDirty || force) {
 
 				const children = this.children;
 
@@ -7810,6 +7816,8 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 					}
 
 				}
+
+				this.childrenDirty = false;
 
 				this.childrenNeedsUpdate = false;
 			}
@@ -7826,41 +7834,18 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 
 			}
 
-			if ( this.matrixAutoUpdate ) this.updateMatrix();
-
-			if ( this.parent === null ) {
-
-				this.matrixWorld.copy( this.matrix );
-
-			} else {
-
-				this.matrixWorld.multiplyMatrices( this.parent.matrixWorld, this.matrix );
-
-			}
-
-			this.matrixWorldNeedsUpdate = false;
-
-			// update children
+			let force = parent !== null && parent.childrenNeedsUpdate === true;
 
 			if ( updateChildren === true ) {
 
-				const children = this.children;
-
-				for ( let i = 0, l = children.length; i < l; i ++ ) {
-
-					const child = children[ i ];
-
-					if ( child.matrixWorldAutoUpdate === true ) {
-
-						child.updateWorldMatrix( false, true );
-
-					}
-
-				}
-
-				this.childrenNeedsUpdate = false;
-
+				this.updateMatrixWorld( force );
 			}
+			else {
+
+				this._updateOwnMatrixWorld( force );
+			}
+
+			
 
 		}
 
@@ -8133,6 +8118,7 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 			this.matrixWorldNeedsUpdate = source.matrixWorldNeedsUpdate;
 			this.matrixNeedsUpdate = source.matrixNeedsUpdate;
 			this.childrenNeedsUpdate = source.childrenNeedsUpdate;
+			this.childrenDirty = source.childrenDirty;
 
 			this.matrixWorldAutoUpdate = source.matrixWorldAutoUpdate;
 
