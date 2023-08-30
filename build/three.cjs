@@ -7284,7 +7284,7 @@ class Object3D extends EventDispatcher {
 
 		let current = this.parent;
 
-		while (current && !current.childrenDirty) {
+		while (current) {
 
 			current.childrenDirty = true;
 
