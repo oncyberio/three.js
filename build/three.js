@@ -7289,7 +7289,7 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 
 			let current = this.parent;
 
-			while (current && !current.childrenDirty) {
+			while (current) {
 
 				current.childrenDirty = true;
 
