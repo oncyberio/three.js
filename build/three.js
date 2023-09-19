@@ -29510,6 +29510,28 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 
 						renderObject( object, scene, camera, geometry, material, group );
 
+						if( geometry._lods ) {
+
+							let i = 1;
+
+							const originalGeometry = geometry;
+
+							while(i < geometry._lods.length) {
+
+								object.geometry =  geometry._lods[i];
+
+								const geom = objects.update( object );
+
+								renderObject( object, scene, camera, geom, material, group );
+
+								i++;
+							}
+
+							
+
+							object.geometry = originalGeometry;
+						}
+
 					}
 
 				}
