@@ -12,10 +12,6 @@
 			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - MD2 Loader
 		</div>
 
-		<!-- Import maps polyfill -->
-		<!-- Remove this when import maps will be widely supported -->
-		<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-
 		<script type="importmap">
 			{
 				"imports": {
@@ -125,7 +121,6 @@
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT );
-				renderer.useLegacyLights = false;
 				container.appendChild( renderer.domElement );
 
 				//
@@ -157,7 +152,7 @@
 
 				} );
 
-				gui.add( playbackConfig, 'wireframe', false ).onChange( function () {
+				gui.add( playbackConfig, 'wireframe' ).onChange( function () {
 
 					character.setWireframe( playbackConfig.wireframe );
 

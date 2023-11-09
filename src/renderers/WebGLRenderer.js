@@ -21,7 +21,9 @@ import {
 	UnsignedInt248Type,
 	UnsignedShort4444Type,
 	UnsignedShort5551Type,
-	WebGLCoordinateSystem
+	WebGLCoordinateSystem,
+	DisplayP3ColorSpace,
+	LinearDisplayP3ColorSpace
 } from '../constants.js';
 import { Color } from '../math/Color.js';
 import { Frustum } from '../math/Frustum.js';
@@ -58,15 +60,8 @@ import { WebGLUtils } from './webgl/WebGLUtils.js';
 import { WebXRManager } from './webxr/WebXRManager.js';
 import { WebGLMaterials } from './webgl/WebGLMaterials.js';
 import { WebGLUniformsGroups } from './webgl/WebGLUniformsGroups.js';
-import { createElementNS } from '../utils.js';
-
-function createCanvasElement() {
-
-	const canvas = createElementNS( 'canvas' );
-	canvas.style.display = 'block';
-	return canvas;
-
-}
+import { createCanvasElement } from '../utils.js';
+import { ColorManagement } from '../math/ColorManagement.js';
 
 class WebGLRenderer {
 
@@ -148,11 +143,11 @@ class WebGLRenderer {
 
 		// physically based shading
 
-		this.outputColorSpace = SRGBColorSpace;
+		this._outputColorSpace = SRGBColorSpace;
 
 		// physical lights
 
-		this.useLegacyLights = true;
+		this._useLegacyLights = false;
 
 		// tone mapping
 
@@ -641,7 +636,12 @@ class WebGLRenderer {
 			}
 
 			if ( depth ) bits |= _gl.DEPTH_BUFFER_BIT;
-			if ( stencil ) bits |= _gl.STENCIL_BUFFER_BIT;
+			if ( stencil ) {
+
+				bits |= _gl.STENCIL_BUFFER_BIT;
+				this.state.buffers.stencil.setMask( 0xffffffff );
+
+			}
 
 			_gl.clear( bits );
 
@@ -802,6 +802,9 @@ class WebGLRenderer {
 			if ( material.wireframe === true ) {
 
 				index = geometries.getWireframeAttribute( geometry );
+
+				if ( index === undefined ) return;
+
 				rangeFactor = 2;
 
 			}
@@ -932,36 +935,40 @@ class WebGLRenderer {
 
 		// Compile
 
-		this.compile = function ( scene, camera ) {
+		function prepareMaterial( material, scene, object ) {
 
-			function prepare( material, scene, object ) {
+			if ( material.transparent === true && material.side === DoubleSide && material.forceSinglePass === false ) {
 
-				if ( material.transparent === true && material.side === DoubleSide && material.forceSinglePass === false ) {
+				material.side = BackSide;
+				material.needsUpdate = true;
+				getProgram( material, scene, object );
 
-					material.side = BackSide;
-					material.needsUpdate = true;
-					getProgram( material, scene, object );
+				material.side = FrontSide;
+				material.needsUpdate = true;
+				getProgram( material, scene, object );
 
-					material.side = FrontSide;
-					material.needsUpdate = true;
-					getProgram( material, scene, object );
+				material.side = DoubleSide;
 
-					material.side = DoubleSide;
+			} else {
 
-				} else {
-
-					getProgram( material, scene, object );
-
-				}
+				getProgram( material, scene, object );
 
 			}
 
-			currentRenderState = renderStates.get( scene );
+		}
+
+		this.compile = function ( scene, camera, targetScene = null ) {
+
+			if ( targetScene === null ) targetScene = scene;
+
+			currentRenderState = renderStates.get( targetScene );
 			currentRenderState.init();
 
 			renderStateStack.push( currentRenderState );
 
-			scene.traverseVisible( function ( object ) {
+			// gather lights from both the target scene and the new object that will be added to the scene.
+
+			targetScene.traverseVisible( function ( object ) {
 
 				if ( object.isLight && object.layers.test( camera.layers ) ) {
 
@@ -977,7 +984,31 @@ class WebGLRenderer {
 
 			} );
 
-			currentRenderState.setupLights( _this.useLegacyLights );
+			if ( scene !== targetScene ) {
+
+				scene.traverseVisible( function ( object ) {
+
+					if ( object.isLight && object.layers.test( camera.layers ) ) {
+
+						currentRenderState.pushLight( object );
+
+						if ( object.castShadow ) {
+
+							currentRenderState.pushShadow( object );
+
+						}
+
+					}
+
+				} );
+
+			}
+
+			currentRenderState.setupLights( _this._useLegacyLights );
+
+			// Only initialize materials in the new scene, not the targetScene.
+
+			const materials = new Set();
 
 			scene.traverse( function ( object ) {
 
@@ -991,13 +1022,15 @@ class WebGLRenderer {
 
 							const material2 = material[ i ];
 
-							prepare( material2, scene, object );
+							prepareMaterial( material2, targetScene, object );
+							materials.add( material2 );
 
 						}
 
 					} else {
 
-						prepare( material, scene, object );
+						prepareMaterial( material, targetScene, object );
+						materials.add( material );
 
 					}
 
@@ -1007,6 +1040,70 @@ class WebGLRenderer {
 
 			renderStateStack.pop();
 			currentRenderState = null;
+
+			return materials;
+
+		};
+
+		// compileAsync
+
+		this.compileAsync = function ( scene, camera, targetScene = null ) {
+
+			const materials = this.compile( scene, camera, targetScene );
+
+			// Wait for all the materials in the new object to indicate that they're
+			// ready to be used before resolving the promise.
+
+			return new Promise( ( resolve ) => {
+
+				function checkMaterialsReady() {
+
+					materials.forEach( function ( material ) {
+
+						const materialProperties = properties.get( material );
+						const program = materialProperties.currentProgram;
+
+						if ( program.isReady() ) {
+
+							// remove any programs that report they're ready to use from the list
+							materials.delete( material );
+
+						}
+
+					} );
+
+					// once the list of compiling materials is empty, call the callback
+
+					if ( materials.size === 0 ) {
+
+						resolve( scene );
+						return;
+
+					}
+
+					// if some materials are still not ready, wait a bit and check again
+
+					setTimeout( checkMaterialsReady, 10 );
+
+				}
+
+				if ( extensions.get( 'KHR_parallel_shader_compile' ) !== null ) {
+
+					// If we can check the compilation status of the materials without
+					// blocking then do so right away.
+
+					checkMaterialsReady();
+
+				} else {
+
+					// Otherwise start by waiting a bit to give the materials we just
+					// initialized a chance to finish.
+
+					setTimeout( checkMaterialsReady, 10 );
+
+				}
+
+			} );
 
 		};
 
@@ -1072,7 +1169,9 @@ class WebGLRenderer {
 
 			if ( xr.enabled === true && xr.isPresenting === true ) {
 
-				camera = xr.updateCameraXR( camera ); // use XR camera for rendering
+				if ( xr.cameraAutoUpdate === true ) xr.updateCamera( camera );
+
+				camera = xr.getCamera(); // use XR camera for rendering
 
 			}
 
@@ -1130,7 +1229,7 @@ class WebGLRenderer {
 
 			// render scene
 
-			currentRenderState.setupLights( _this.useLegacyLights );
+			currentRenderState.setupLights( _this._useLegacyLights );
 
 			if ( camera.isArrayCamera ) {
 
@@ -1344,6 +1443,14 @@ class WebGLRenderer {
 
 		function renderTransmissionPass( opaqueObjects, transmissiveObjects, scene, camera ) {
 
+			const overrideMaterial = scene.isScene === true ? scene.overrideMaterial : null;
+
+			if ( overrideMaterial !== null ) {
+
+				return;
+
+			}
+
 			const isWebGL2 = capabilities.isWebGL2;
 
 			if ( _transmissionRenderTarget === null ) {
@@ -1352,7 +1459,7 @@ class WebGLRenderer {
 					generateMipmaps: true,
 					type: extensions.has( 'EXT_color_buffer_half_float' ) ? HalfFloatType : UnsignedByteType,
 					minFilter: LinearMipmapLinearFilter,
-					samples: ( isWebGL2 && antialias === true ) ? 4 : 0
+					samples: ( isWebGL2 ) ? 4 : 0
 				} );
 
 				// debug
@@ -1626,13 +1733,23 @@ class WebGLRenderer {
 
 			}
 
-			const progUniforms = program.getUniforms();
-			const uniformsList = WebGLUniforms.seqWithValue( progUniforms.seq, uniforms );
-
 			materialProperties.currentProgram = program;
-			materialProperties.uniformsList = uniformsList;
+			materialProperties.uniformsList = null;
 
 			return program;
+
+		}
+
+		function getUniformList( materialProperties ) {
+
+			if ( materialProperties.uniformsList === null ) {
+
+				const progUniforms = materialProperties.currentProgram.getUniforms();
+				materialProperties.uniformsList = WebGLUniforms.seqWithValue( progUniforms.seq, materialProperties.uniforms );
+
+			}
+
+			return materialProperties.uniformsList;
 
 		}
 
@@ -1642,6 +1759,7 @@ class WebGLRenderer {
 
 			materialProperties.outputColorSpace = parameters.outputColorSpace;
 			materialProperties.instancing = parameters.instancing;
+			materialProperties.instancingColor = parameters.instancingColor;
 			materialProperties.skinning = parameters.skinning;
 			materialProperties.morphTargets = parameters.morphTargets;
 			materialProperties.morphNormals = parameters.morphNormals;
@@ -1670,7 +1788,18 @@ class WebGLRenderer {
 			const morphTargets = !! geometry.morphAttributes.position;
 			const morphNormals = !! geometry.morphAttributes.normal;
 			const morphColors = !! geometry.morphAttributes.color;
-			const toneMapping = material.toneMapped ? _this.toneMapping : NoToneMapping;
+
+			let toneMapping = NoToneMapping;
+
+			if ( material.toneMapped ) {
+
+				if ( _currentRenderTarget === null || _currentRenderTarget.isXRRenderTarget === true ) {
+
+					toneMapping = _this.toneMapping;
+
+				}
+
+			}
 
 			const morphAttribute = geometry.morphAttributes.position || geometry.morphAttributes.normal || geometry.morphAttributes.color;
 			const morphTargetsCount = ( morphAttribute !== undefined ) ? morphAttribute.length : 0;
@@ -1722,6 +1851,14 @@ class WebGLRenderer {
 					needsProgramChange = true;
 
 				} else if ( ! object.isSkinnedMesh && materialProperties.skinning === true ) {
+
+					needsProgramChange = true;
+
+				} else if ( object.isInstancedMesh && materialProperties.instancingColor === true && object.instanceColor === null ) {
+
+					needsProgramChange = true;
+
+				} else if ( object.isInstancedMesh && materialProperties.instancingColor === false && object.instanceColor !== null ) {
 
 					needsProgramChange = true;
 
@@ -1811,7 +1948,18 @@ class WebGLRenderer {
 
 			if ( refreshProgram || _currentCamera !== camera ) {
 
+				// common camera uniforms
+
 				p_uniforms.setValue( _gl, 'projectionMatrix', camera.projectionMatrix );
+				p_uniforms.setValue( _gl, 'viewMatrix', camera.matrixWorldInverse );
+
+				const uCamPos = p_uniforms.map.cameraPosition;
+
+				if ( uCamPos !== undefined ) {
+
+					uCamPos.setValue( _gl, _vector3.setFromMatrixPosition( camera.matrixWorld ) );
+
+				}
 
 				if ( capabilities.logarithmicDepthBuffer ) {
 
@@ -1819,39 +1967,8 @@ class WebGLRenderer {
 						2.0 / ( Math.log( camera.far + 1.0 ) / Math.LN2 ) );
 
 				}
-				if ( _currentCamera !== camera ) {
 
-					_currentCamera = camera;
-
-					// lighting uniforms depend on the camera so enforce an update
-					// now, in case this material supports lights - or later, when
-					// the next material that does gets activated:
-
-					refreshMaterial = true;		// set to true on material change
-					refreshLights = true;		// remains set until update done
-
-				}
-
-				// load material specific uniforms
-				// (shader material also gets them for the sake of genericity)
-
-				if ( material.isShaderMaterial ||
-					material.isMeshPhongMaterial ||
-					material.isMeshToonMaterial ||
-					material.isMeshStandardMaterial ||
-					material.fog || 
-					material.envMap ) {
-
-					const uCamPos = p_uniforms.map.cameraPosition;
-
-					if ( uCamPos !== undefined ) {
-
-						uCamPos.setValue( _gl,
-							_vector3.setFromMatrixPosition( camera.matrixWorld ) );
-
-					}
-
-				}
+				// consider moving isOrthographic to UniformLib and WebGLMaterials, see https://github.com/mrdoob/three.js/pull/26467#issuecomment-1645185067
 
 				if ( material.isMeshPhongMaterial ||
 					material.isMeshToonMaterial ||
@@ -1864,16 +1981,16 @@ class WebGLRenderer {
 
 				}
 
-				if ( material.isMeshPhongMaterial ||
-					material.isMeshToonMaterial ||
-					material.isMeshLambertMaterial ||
-					material.isMeshBasicMaterial ||
-					material.isMeshStandardMaterial ||
-					material.isShaderMaterial ||
-					material.isShadowMaterial ||
-					object.isSkinnedMesh ) {
+				if ( _currentCamera !== camera ) {
 
-					p_uniforms.setValue( _gl, 'viewMatrix', camera.matrixWorldInverse );
+					_currentCamera = camera;
+
+					// lighting uniforms depend on the camera so enforce an update
+					// now, in case this material supports lights - or later, when
+					// the next material that does gets activated:
+
+					refreshMaterial = true;		// set to true on material change
+					refreshLights = true;		// remains set until update done
 
 				}
 
@@ -1976,13 +2093,13 @@ class WebGLRenderer {
 
 				materials.refreshMaterialUniforms( m_uniforms, material, _pixelRatio, _height, _transmissionRenderTarget );
 
-				WebGLUniforms.upload( _gl, materialProperties.uniformsList, m_uniforms, textures );
+				WebGLUniforms.upload( _gl, getUniformList( materialProperties ), m_uniforms, textures );
 
 			}
 
 			if ( material.isShaderMaterial && material.uniformsNeedUpdate === true ) {
 
-				WebGLUniforms.upload( _gl, materialProperties.uniformsList, m_uniforms, textures );
+				WebGLUniforms.upload( _gl, getUniformList( materialProperties ), m_uniforms, textures );
 				material.uniformsNeedUpdate = false;
 
 			}
@@ -2153,7 +2270,16 @@ class WebGLRenderer {
 
 				if ( renderTarget.isWebGLCubeRenderTarget ) {
 
-					framebuffer = __webglFramebuffer[ activeCubeFace ];
+					if ( Array.isArray( __webglFramebuffer[ activeCubeFace ] ) ) {
+
+						framebuffer = __webglFramebuffer[ activeCubeFace ][ activeMipmapLevel ];
+
+					} else {
+
+						framebuffer = __webglFramebuffer[ activeCubeFace ];
+
+					}
+
 					isCube = true;
 
 				} else if ( ( capabilities.isWebGL2 && renderTarget.samples > 0 ) && textures.useMultisampledRTT( renderTarget ) === false ) {
@@ -2162,7 +2288,15 @@ class WebGLRenderer {
 
 				} else {
 
-					framebuffer = __webglFramebuffer;
+					if ( Array.isArray( __webglFramebuffer ) ) {
+
+						framebuffer = __webglFramebuffer[ activeMipmapLevel ];
+
+					} else {
+
+						framebuffer = __webglFramebuffer;
+
+					}
 
 				}
 
@@ -2459,16 +2593,32 @@ class WebGLRenderer {
 
 	}
 
+	get outputColorSpace() {
+
+		return this._outputColorSpace;
+
+	}
+
+	set outputColorSpace( colorSpace ) {
+
+		this._outputColorSpace = colorSpace;
+
+		const gl = this.getContext();
+		gl.drawingBufferColorSpace = colorSpace === DisplayP3ColorSpace ? 'display-p3' : 'srgb';
+		gl.unpackColorSpace = ColorManagement.workingColorSpace === LinearDisplayP3ColorSpace ? 'display-p3' : 'srgb';
+
+	}
+
 	get physicallyCorrectLights() { // @deprecated, r150
 
-		console.warn( 'THREE.WebGLRenderer: the property .physicallyCorrectLights has been removed. Set renderer.useLegacyLights instead.' );
+		console.warn( 'THREE.WebGLRenderer: The property .physicallyCorrectLights has been removed. Set renderer.useLegacyLights instead.' );
 		return ! this.useLegacyLights;
 
 	}
 
 	set physicallyCorrectLights( value ) { // @deprecated, r150
 
-		console.warn( 'THREE.WebGLRenderer: the property .physicallyCorrectLights has been removed. Set renderer.useLegacyLights instead.' );
+		console.warn( 'THREE.WebGLRenderer: The property .physicallyCorrectLights has been removed. Set renderer.useLegacyLights instead.' );
 		this.useLegacyLights = ! value;
 
 	}
@@ -2484,6 +2634,20 @@ class WebGLRenderer {
 
 		console.warn( 'THREE.WebGLRenderer: Property .outputEncoding has been removed. Use .outputColorSpace instead.' );
 		this.outputColorSpace = encoding === sRGBEncoding ? SRGBColorSpace : LinearSRGBColorSpace;
+
+	}
+
+	get useLegacyLights() { // @deprecated, r155
+
+		console.warn( 'THREE.WebGLRenderer: The property .useLegacyLights has been deprecated. Migrate your lighting according to the following guide: https://discourse.threejs.org/t/updates-to-lighting-in-three-js-r155/53733.' );
+		return this._useLegacyLights;
+
+	}
+
+	set useLegacyLights( value ) { // @deprecated, r155
+
+		console.warn( 'THREE.WebGLRenderer: The property .useLegacyLights has been deprecated. Migrate your lighting according to the following guide: https://discourse.threejs.org/t/updates-to-lighting-in-three-js-r155/53733.' );
+		this._useLegacyLights = value;
 
 	}
 

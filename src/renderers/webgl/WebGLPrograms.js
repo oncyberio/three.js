@@ -1,9 +1,11 @@
-import { BackSide, DoubleSide, CubeUVReflectionMapping, ObjectSpaceNormalMap, TangentSpaceNormalMap, NoToneMapping, SRGBColorSpace,  NormalBlending, LinearSRGBColorSpace } from '../../constants.js';
+
+import { BackSide, DoubleSide, CubeUVReflectionMapping, ObjectSpaceNormalMap, TangentSpaceNormalMap, NoToneMapping, NormalBlending, LinearSRGBColorSpace, SRGBTransfer } from '../../constants.js';
 import { Layers } from '../../core/Layers.js';
 import { WebGLProgram } from './WebGLProgram.js';
 import { WebGLShaderCache } from './WebGLShaderCache.js';
 import { ShaderLib } from '../shaders/ShaderLib.js';
 import { UniformsUtils } from '../shaders/UniformsUtils.js';
+import { ColorManagement } from '../../math/ColorManagement.js';
 
 function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities, bindingStates, clipping ) {
 
@@ -163,6 +165,18 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 		const HAS_ATTRIBUTE_UV2 = !! geometry.attributes.uv2;
 		const HAS_ATTRIBUTE_UV3 = !! geometry.attributes.uv3;
 
+		let toneMapping = NoToneMapping;
+
+		if ( material.toneMapped ) {
+
+			if ( currentRenderTarget === null || currentRenderTarget.isXRRenderTarget === true ) {
+
+				toneMapping = renderer.toneMapping;
+
+			}
+
+		}
+
 		const parameters = {
 
 			isWebGL2: IS_WEBGL2,
@@ -206,7 +220,7 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			normalMapObjectSpace: HAS_NORMALMAP && material.normalMapType === ObjectSpaceNormalMap,
 			normalMapTangentSpace: HAS_NORMALMAP && material.normalMapType === TangentSpaceNormalMap,
 
-			decodeVideoTexture: HAS_MAP && ( material.map.isVideoTexture === true ) && ( material.map.colorSpace === SRGBColorSpace ),
+			decodeVideoTexture: HAS_MAP && ( material.map.isVideoTexture === true ) && ( ColorManagement.getTransfer( material.map.colorSpace ) === SRGBTransfer ),
 
 			metalnessMap: HAS_METALNESSMAP,
 			roughnessMap: HAS_ROUGHNESSMAP,
@@ -320,6 +334,8 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			numSpotLightShadows: lights.spotShadowMap.length,
 			numSpotLightShadowsWithMaps: lights.numSpotLightShadowsWithMaps,
 
+			numLightProbes: lights.numLightProbes,
+
 			numClippingPlanes: clipping.numPlanes,
 			numClipIntersection: clipping.numIntersection,
 
@@ -328,8 +344,10 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			shadowMapEnabled: renderer.shadowMap.enabled && shadows.length > 0,
 			shadowMapType: renderer.shadowMap.type,
 
-			toneMapping: material.toneMapped ? renderer.toneMapping : NoToneMapping,
-			useLegacyLights: renderer.useLegacyLights,
+			toneMapping: toneMapping,
+			useLegacyLights: renderer._useLegacyLights,
+
+			decodeVideoTexture: HAS_MAP && ( material.map.isVideoTexture === true ) && ( ColorManagement.getTransfer( material.map.colorSpace ) === SRGBTransfer ),
 
 			premultipliedAlpha: material.premultipliedAlpha,
 
@@ -349,6 +367,7 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			rendererExtensionFragDepth: IS_WEBGL2 || extensions.has( 'EXT_frag_depth' ),
 			rendererExtensionDrawBuffers: IS_WEBGL2 || extensions.has( 'WEBGL_draw_buffers' ),
 			rendererExtensionShaderTextureLod: IS_WEBGL2 || extensions.has( 'EXT_shader_texture_lod' ),
+			rendererExtensionParallelShaderCompile: extensions.has( 'KHR_parallel_shader_compile' ),
 
 			customProgramCacheKey: material.customProgramCacheKey()
 
@@ -443,6 +462,7 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 		array.push( parameters.numPointLightShadows );
 		array.push( parameters.numSpotLightShadows );
 		array.push( parameters.numSpotLightShadowsWithMaps );
+		array.push( parameters.numLightProbes );
 		array.push( parameters.shadowMapType );
 		array.push( parameters.toneMapping );
 		array.push( parameters.numClippingPlanes );
@@ -491,6 +511,8 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			_programLayers.enable( 16 );
 		if ( parameters.anisotropy )
 			_programLayers.enable( 17 );
+		if ( parameters.alphaHash )
+			_programLayers.enable( 18 );
 
 		array.push( _programLayers.mask );
 		_programLayers.disableAll();
@@ -532,8 +554,10 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 		if ( parameters.decodeVideoTexture )
 			_programLayers.enable( 17 );
 		if ( parameters.opaque )
-			_programLayers.enable( 18 );
+			_programLayers.enable( 17 );
 		if ( parameters.pointsUvs )
+			_programLayers.enable( 18 );
+		if ( parameters.decodeVideoTexture )
 			_programLayers.enable( 19 );
 
 		array.push( _programLayers.mask );
