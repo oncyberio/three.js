@@ -100,6 +100,8 @@ class WebGLRenderer {
 		let currentRenderList = null;
 		let currentRenderState = null;
 
+		// this.currentRenderState = currentRenderState
+
 		// render() can be called from within a callback triggered by another render.
 		// We track this so that the nested render call gets its list and state isolated from the parent render call.
 
@@ -360,6 +362,7 @@ class WebGLRenderer {
 
 			info.programs = programCache.programs;
 
+			_this.objects = objects;
 			_this.capabilities = capabilities;
 			_this.extensions = extensions;
 			_this.properties = properties;
@@ -1146,9 +1149,11 @@ class WebGLRenderer {
 		xr.addEventListener( 'sessionstart', onXRSessionStart );
 		xr.addEventListener( 'sessionend', onXRSessionEnd );
 
+	
+
 		// Rendering
 
-		this.render = function ( scene, camera ) {
+		this.render = function ( scene, camera, shadows = [] ) {
 
 			if ( camera !== undefined && camera.isCamera !== true ) {
 
@@ -1189,8 +1194,10 @@ class WebGLRenderer {
 			_localClippingEnabled = this.localClippingEnabled;
 			_clippingEnabled = clipping.init( this.clippingPlanes, _localClippingEnabled );
 
+
 			currentRenderList = renderLists.get( scene, renderListStack.length );
 			currentRenderList.init();
+			
 
 			renderListStack.push( currentRenderList );
 
@@ -1206,7 +1213,7 @@ class WebGLRenderer {
 
 			//
 
-			this.currentRenderList = currentRenderList
+			this.currentRenderList = currentRenderList;
 			
 			this.info.render.frame ++;
 
@@ -1216,14 +1223,35 @@ class WebGLRenderer {
 
 			shadowMap.render( shadowsArray, scene, camera );
 
+			if( shadows.length > 0 ) {
+
+				let i = 0 
+
+				while( i < shadows.length ) {
+
+					if ( shadows[i].onRender != null ) {
+
+						const shadow = shadows[i].onRender( scene, camera )
+
+						if( shadow ) {
+
+							currentRenderState.pushShadow( shadow  )
+							currentRenderState.pushLight( shadow  )
+							
+							
+						}
+					}
+
+					i++
+				}
+
+			}
+			
 			if ( _clippingEnabled === true ) clipping.endShadows();
 
 			//
 
 			if ( this.info.autoReset === true ) this.info.reset();
-
-
-			//
 
 			background.render( currentRenderList, scene );
 
