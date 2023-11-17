@@ -28,6 +28,8 @@ class LightShadow {
 		this.autoUpdate = true;
 		this.needsUpdate = false;
 
+		this.shadowOnly = false;
+
 		this._frustum = new Frustum();
 		this._frameExtents = new Vector2( 1, 1 );
 

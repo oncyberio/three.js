@@ -102,7 +102,8 @@ function ShadowUniformsCache() {
 						shadowBias: 0,
 						shadowNormalBias: 0,
 						shadowRadius: 1,
-						shadowMapSize: new Vector2()
+						shadowMapSize: new Vector2(),
+						shadowOnly : false
 					};
 					break;
 
@@ -273,6 +274,7 @@ function WebGLLights( extensions, capabilities ) {
 					shadowUniforms.shadowNormalBias = shadow.normalBias;
 					shadowUniforms.shadowRadius = shadow.radius;
 					shadowUniforms.shadowMapSize = shadow.mapSize;
+					shadowUniforms.shadowOnly = shadow.shadowOnly;
 
 					state.directionalShadow[ directionalLength ] = shadowUniforms;
 					state.directionalShadowMap[ directionalLength ] = shadowMap;

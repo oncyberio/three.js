@@ -132,7 +132,8 @@ const UniformsLib = {
 			shadowBias: {},
 			shadowNormalBias: {},
 			shadowRadius: {},
-			shadowMapSize: {}
+			shadowMapSize: {},
+			shadowOnly : {}
 		} },
 
 		directionalShadowMap: { value: [] },

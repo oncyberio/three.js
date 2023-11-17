@@ -19,6 +19,7 @@ export default /* glsl */`
 			float shadowNormalBias;
 			float shadowRadius;
 			vec2 shadowMapSize;
+			bool shadowOnly;
 		};
 
 		uniform DirectionalLightShadow directionalLightShadows[ NUM_DIR_LIGHT_SHADOWS ];

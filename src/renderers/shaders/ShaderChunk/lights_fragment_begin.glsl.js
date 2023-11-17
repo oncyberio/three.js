@@ -145,7 +145,12 @@ IncidentLight directLight;
 		directLight.color *= ( directLight.visible && receiveShadow ) ? getShadow( directionalShadowMap[ i ], directionalLightShadow.shadowMapSize, directionalLightShadow.shadowBias, directionalLightShadow.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;
 		#endif
 
-		RE_Direct( directLight, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );
+        if( directionalLightShadow.shadowOnly ){
+            reflectedLight.directDiffuse *= directLight.color;
+        }
+        else {
+            RE_Direct( directLight, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );
+        }
 
 	}
 	#pragma unroll_loop_end
