@@ -58,6 +58,36 @@ function WebGLIndexedBufferRenderer( gl, extensions, info, capabilities ) {
 
 	}
 
+	function renderMultiDraw( starts, counts, drawCount ) {
+
+		if ( drawCount === 0 ) return;
+
+		const extension = extensions.get( 'WEBGL_multi_draw' );
+		if ( extension === null ) {
+
+			for ( let i = 0; i < drawCount; i ++ ) {
+
+				this.render( starts[ i ] / bytesPerElement, counts[ i ] );
+
+			}
+
+		} else {
+
+			extension.multiDrawElementsWEBGL( mode, counts, 0, type, starts, 0, drawCount );
+
+			let elementCount = 0;
+			for ( let i = 0; i < drawCount; i ++ ) {
+
+				elementCount += counts[ i ];
+
+			}
+
+			info.update( elementCount, mode, 1 );
+
+		}
+
+	}
+
 	function renderMultiDrawInstanced( counts, starts, instances, length ){
 
 		let extension = capabilities.multidraw
@@ -85,9 +115,7 @@ function WebGLIndexedBufferRenderer( gl, extensions, info, capabilities ) {
 			let instanceTotal = instances.reduce((e,t)=>e + t, 0)
 
 			info.update( countsTotal, mode, instanceTotal );
-
 		}
-
 	}
 
 	//
@@ -96,7 +124,8 @@ function WebGLIndexedBufferRenderer( gl, extensions, info, capabilities ) {
 	this.setIndex = setIndex;
 	this.render = render;
 	this.renderInstances = renderInstances;
-	this.renderMultiDrawInstanced = renderMultiDrawInstanced
+	this.renderMultiDraw = renderMultiDraw;
+
 }
 
 
