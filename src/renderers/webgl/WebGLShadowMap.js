@@ -331,7 +331,7 @@ function WebGLShadowMap( _renderer, _objects, _capabilities ) {
 
 		if ( object.visible === false ) return;
 
-		const visible = object.layers.test( camera.layers );
+		const visible = object.layers.test( shadowCamera.layers );
 
 		if ( visible && ( object.isMesh || object.isLine || object.isPoints ) ) {
 
