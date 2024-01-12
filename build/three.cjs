@@ -5,7 +5,7 @@
  */
 'use strict';
 
-const REVISION = '161devshadow';
+const REVISION = '161devshadow2.0';
 
 const MOUSE = { LEFT: 0, MIDDLE: 1, RIGHT: 2, ROTATE: 0, DOLLY: 1, PAN: 2 };
 const TOUCH = { ROTATE: 0, PAN: 1, DOLLY_PAN: 2, DOLLY_ROTATE: 3 };
@@ -22753,6 +22753,30 @@ function WebGLShadowMap( _renderer, _objects, _capabilities ) {
 					_renderer.renderBufferDirect( shadowCamera, null, geometry, depthMaterial, object, null );
 
 					object.onAfterShadow( _renderer, object, camera, shadowCamera, geometry, depthMaterial, null );
+
+					
+					// renderObject( object, scene, camera, geometry, material, group );
+
+					if( geometry._lods ) {
+
+						let i = 1;
+
+						const originalGeometry = geometry;
+
+						while(i < geometry._lods.length) {
+
+							object.geometry =  geometry._lods[i];
+
+							objects.update( object );
+
+							_renderer.renderBufferDirect( shadowCamera, null, geometry, depthMaterial, object, null );
+
+							i++;
+						}
+						
+
+						object.geometry = originalGeometry;
+					}
 
 				}
 
