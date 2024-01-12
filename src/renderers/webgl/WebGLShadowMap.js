@@ -376,7 +376,7 @@ function WebGLShadowMap( _renderer, _objects, _capabilities ) {
 
 					object.onAfterShadow( _renderer, object, camera, shadowCamera, geometry, depthMaterial, null );
 
-					
+
 					// renderObject( object, scene, camera, geometry, material, group );
 
 					if( geometry._lods ) {
@@ -389,9 +389,9 @@ function WebGLShadowMap( _renderer, _objects, _capabilities ) {
 
 							object.geometry =  geometry._lods[i]
 
-							const geom = objects.update( object );
+							const geom = _objects.update( object );
 
-							_renderer.renderBufferDirect( shadowCamera, null, geometry, depthMaterial, object, null );
+							_renderer.renderBufferDirect( shadowCamera, null, geom, depthMaterial, object, null );
 
 							i++
 						}
