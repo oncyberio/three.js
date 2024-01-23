@@ -5,7 +5,7 @@
  */
 'use strict';
 
-const REVISION = '161devshadow3.0';
+const REVISION = '161devshadow4.0';
 
 const MOUSE = { LEFT: 0, MIDDLE: 1, RIGHT: 2, ROTATE: 0, DOLLY: 1, PAN: 2 };
 const TOUCH = { ROTATE: 0, PAN: 1, DOLLY_PAN: 2, DOLLY_ROTATE: 3 };
@@ -13979,9 +13979,9 @@ var fog_vertex = "#ifdef USE_FOG\n\tvFogDepth = - mvPosition.z;\n\t#ifdef USE_FO
 
 var fog_pars_vertex = "#ifdef USE_FOG\n\tvarying float vFogDepth;\n\t#ifdef USE_FOG_TEXTURE\n\t\tvarying vec3 vFogPosition;\n\t#endif\n#endif";
 
-var fog_fragment = "#ifdef USE_FOG\n\t#ifdef FOG_EXP2\n\t\tfloat fogFactor = 1.0 - exp( - fogDensity * fogDensity * vFogDepth * vFogDepth );\n\t#else\n\t\tfloat fogFactor = smoothstep( fogNear, fogFar, vFogDepth );\n\t#endif\n\t#ifdef USE_FOG_TEXTURE\n\t\tvec3 p = normalize(cameraPosition.xyz - vFogPosition.xyz);\n\t\n\t\tvec3 fogColor = fogTextureCubeUV( fogTexture, -p, 0.0 ).rgb;\n\t\tfogColor = linearToOutputTexel( vec4(fogColor, 1.0) ).rgb;\n\t#endif\n\tgl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, fogFactor );\n#endif";
+var fog_fragment = "#ifdef USE_FOG\n    #ifdef FOG_EXP2\n        float fogFactor = 1.0 - exp( - fogDensity * fogDensity * vFogDepth * vFogDepth );\n    #else\n        float fogFactor = smoothstep( fogNear, fogFar, vFogDepth );\n    #endif\n    #ifdef USE_FOG_TEXTURE\n        vec3 p = normalize(cameraPosition.xyz - vFogPosition.xyz);\n    \n        vec3 fogColor = fogTextureCubeUV( fogTexture, -p, 0.0 ).rgb;\n        fogColor = linearToOutputTexel( vec4(fogColor, 1.0) ).rgb;\n    #endif\n    vec3 closeColor = gl_FragColor.rgb;    vec3 midColor = fadeColor;    vec3 farColor = fogColor;\n    float midFogFactor = smoothstep(0.0, 0.8, fogFactor);    \n    vec3 blendedColor = mix(closeColor, midColor, midFogFactor);\n    blendedColor = mix(blendedColor, farColor, fogFactor);\n    gl_FragColor.rgb = blendedColor;\n#endif";
 
-var fog_pars_fragment = "#ifdef USE_FOG\n\tuniform vec3 fogColor;\n\tvarying float vFogDepth;\n\t#ifdef USE_FOG_TEXTURE\n\t\t#ifndef FOG_ENVMAP_TYPE_CUBE_UV\n\t\t\t#define FOG_ENVMAP_TYPE_CUBE_UV\n\t\t\t#include <fog_cube_uv_reflection_fragment>\n\t\t#endif\n\t\tuniform sampler2D fogTexture;\n\t\tvarying vec3 vFogPosition;\n\t\tconst vec2 invAtan = vec2(0.1591, 0.3183);\n\t\tvec2 SampleSphericalMap(vec3 direction)\n\t\t{\n\t\t    vec2 uv = vec2(atan(direction.z, -direction.x), asin(direction.y));\n\t\t    uv *= invAtan;\n\t\t    uv += 0.5;\n\t\t    return vec2(uv.x, 1.0 - uv.y);\n\t\t}\n\t#endif\n\t#ifdef FOG_EXP2\n\t\tuniform float fogDensity;\n\t#else\n\t\tuniform float fogNear;\n\t\tuniform float fogFar;\n\t#endif\n#endif";
+var fog_pars_fragment = "#ifdef USE_FOG\n\tuniform vec3 fogColor;\n\tvarying float vFogDepth;\n\tuniform vec3 fadeColor;\n\t#ifdef USE_FOG_TEXTURE\n\t\t#ifndef FOG_ENVMAP_TYPE_CUBE_UV\n\t\t\t#define FOG_ENVMAP_TYPE_CUBE_UV\n\t\t\t#include <fog_cube_uv_reflection_fragment>\n\t\t#endif\n\t\tuniform sampler2D fogTexture;\n\t\tvarying vec3 vFogPosition;\n\t\tconst vec2 invAtan = vec2(0.1591, 0.3183);\n\t\tvec2 SampleSphericalMap(vec3 direction)\n\t\t{\n\t\t    vec2 uv = vec2(atan(direction.z, -direction.x), asin(direction.y));\n\t\t    uv *= invAtan;\n\t\t    uv += 0.5;\n\t\t    return vec2(uv.x, 1.0 - uv.y);\n\t\t}\n\t#endif\n\t#ifdef FOG_EXP2\n\t\tuniform float fogDensity;\n\t#else\n\t\tuniform float fogNear;\n\t\tuniform float fogFar;\n\t#endif\n#endif";
 
 var gradientmap_pars_fragment = "#ifdef USE_GRADIENTMAP\n\tuniform sampler2D gradientMap;\n#endif\nvec3 getGradientIrradiance( vec3 normal, vec3 lightDirection ) {\n\tfloat dotNL = dot( normal, lightDirection );\n\tvec2 coord = vec2( dotNL * 0.5 + 0.5, 0.0 );\n\t#ifdef USE_GRADIENTMAP\n\t\treturn vec3( texture2D( gradientMap, coord ).r );\n\t#else\n\t\tvec2 fw = fwidth( coord ) * 0.5;\n\t\treturn mix( vec3( 0.7 ), vec3( 1.0 ), smoothstep( 0.7 - fw.x, 0.7 + fw.x, coord.x ) );\n\t#endif\n}";
 
@@ -14441,7 +14441,8 @@ const UniformsLib = {
 		fogNear: { value: 1 },
 		fogFar: { value: 2000 },
 		fogColor: { value: /*@__PURE__*/ new Color( 0xffffff ) },
-		fogTexture : { value: null }
+		fogTexture : { value: null },
+		fadeColor: { value: new Color(0xffffff)}
 	},
 
 	lights: {
@@ -27680,6 +27681,7 @@ function WebGLMaterials( renderer, properties ) {
 	function refreshFogUniforms( uniforms, fog ) {
 
 		fog.color.getRGB( uniforms.fogColor.value, getUnlitUniformColorSpace( renderer ) );
+		fog.fadeColor.getRGB( uniforms.fadeColor.value, getUnlitUniformColorSpace( renderer ) );
 
 		if ( fog.isFog ) {
 
@@ -27691,7 +27693,6 @@ function WebGLMaterials( renderer, properties ) {
 
 			uniforms.fogDensity.value = fog.density;
 			uniforms.fogTexture.value = fog.fogTexture;
-
 		}
 
 	}
@@ -31279,13 +31280,15 @@ class FogExp2 {
 
 class Fog {
 
-	constructor( color, near = 1, far = 1000, texture = null ) {
+	constructor( color, near = 1, far = 1000, texture = null, fadeColor ) {
 
 		this.isFog = true;
 
 		this.name = '';
 
 		this.color = new Color( color );
+
+		this.fadeColor = new Color( fadeColor );
 
 		this.near = near;
 		this.far = far;
@@ -31294,9 +31297,11 @@ class Fog {
 
 	}
 
+
+	
 	clone() {
 
-		return new Fog( this.color, this.near, this.far, this.fogTexture );
+		return new Fog( this.color, this.near, this.far, this.fogTexture, this.fadeColor );
 
 	}
 
@@ -31308,7 +31313,8 @@ class Fog {
 			color: this.color.getHex(),
 			near: this.near,
 			far: this.far,
-			fogTexture: this.fogTexture
+			fogTexture: this.fogTexture,
+			fadeColor: this.fadeColor.gethex()
 		};
 
 	}

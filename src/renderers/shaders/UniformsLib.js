@@ -114,7 +114,8 @@ const UniformsLib = {
 		fogNear: { value: 1 },
 		fogFar: { value: 2000 },
 		fogColor: { value: /*@__PURE__*/ new Color( 0xffffff ) },
-		fogTexture : { value: null }
+		fogTexture : { value: null },
+		fadeColor: { value: new Color(0xffffff)}
 	},
 
 	lights: {

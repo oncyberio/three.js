@@ -18,6 +18,7 @@ function WebGLMaterials( renderer, properties ) {
 	function refreshFogUniforms( uniforms, fog ) {
 
 		fog.color.getRGB( uniforms.fogColor.value, getUnlitUniformColorSpace( renderer ) );
+		fog.fadeColor.getRGB( uniforms.fadeColor.value, getUnlitUniformColorSpace( renderer ) );
 
 		if ( fog.isFog ) {
 
@@ -29,7 +30,6 @@ function WebGLMaterials( renderer, properties ) {
 
 			uniforms.fogDensity.value = fog.density;
 			uniforms.fogTexture.value = fog.fogTexture
-
 		}
 
 	}

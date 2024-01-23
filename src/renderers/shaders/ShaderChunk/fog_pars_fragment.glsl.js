@@ -3,6 +3,7 @@ export default /* glsl */`
 
 	uniform vec3 fogColor;
 	varying float vFogDepth;
+	uniform vec3 fadeColor;
 
 	#ifdef USE_FOG_TEXTURE
 
