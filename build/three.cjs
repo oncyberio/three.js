@@ -5,7 +5,7 @@
  */
 'use strict';
 
-const REVISION = '161devshadow4.0';
+const REVISION = '161devshadow4.1';
 
 const MOUSE = { LEFT: 0, MIDDLE: 1, RIGHT: 2, ROTATE: 0, DOLLY: 1, PAN: 2 };
 const TOUCH = { ROTATE: 0, PAN: 1, DOLLY_PAN: 2, DOLLY_ROTATE: 3 };
@@ -166,7 +166,7 @@ const ObjectSpaceNormalMap = 1;
 
 // Color space string identifiers, matching CSS Color Module Level 4 and WebGPU names where available.
 const NoColorSpace = '';
-const SRGBColorSpace = 'srgb';
+const SRGBColorSpace$1 = 'srgb';
 const LinearSRGBColorSpace = 'srgb-linear';
 const DisplayP3ColorSpace = 'display-p3';
 const LinearDisplayP3ColorSpace = 'display-p3-linear';
@@ -1600,7 +1600,7 @@ const COLOR_SPACES = {
 		toReference: ( color ) => color,
 		fromReference: ( color ) => color,
 	},
-	[ SRGBColorSpace ]: {
+	[ SRGBColorSpace$1 ]: {
 		transfer: SRGBTransfer,
 		primaries: Rec709Primaries,
 		toReference: ( color ) => color.convertSRGBToLinear(),
@@ -2004,7 +2004,7 @@ class Texture extends EventDispatcher {
 		} else { // @deprecated, r152
 
 			warnOnce( 'THREE.Texture: Property .encoding has been replaced by .colorSpace.' );
-			this.colorSpace = colorSpace === sRGBEncoding ? SRGBColorSpace : NoColorSpace;
+			this.colorSpace = colorSpace === sRGBEncoding ? SRGBColorSpace$1 : NoColorSpace;
 
 		}
 
@@ -2249,14 +2249,14 @@ class Texture extends EventDispatcher {
 	get encoding() { // @deprecated, r152
 
 		warnOnce( 'THREE.Texture: Property .encoding has been replaced by .colorSpace.' );
-		return this.colorSpace === SRGBColorSpace ? sRGBEncoding : LinearEncoding;
+		return this.colorSpace === SRGBColorSpace$1 ? sRGBEncoding : LinearEncoding;
 
 	}
 
 	set encoding( encoding ) { // @deprecated, r152
 
 		warnOnce( 'THREE.Texture: Property .encoding has been replaced by .colorSpace.' );
-		this.colorSpace = encoding === sRGBEncoding ? SRGBColorSpace : NoColorSpace;
+		this.colorSpace = encoding === sRGBEncoding ? SRGBColorSpace$1 : NoColorSpace;
 
 	}
 
@@ -2937,7 +2937,7 @@ class RenderTarget extends EventDispatcher {
 
 			// @deprecated, r152
 			warnOnce( 'THREE.WebGLRenderTarget: option.encoding has been replaced by option.colorSpace.' );
-			options.colorSpace = options.encoding === sRGBEncoding ? SRGBColorSpace : NoColorSpace;
+			options.colorSpace = options.encoding === sRGBEncoding ? SRGBColorSpace$1 : NoColorSpace;
 
 		}
 
@@ -8656,7 +8656,7 @@ class Color {
 
 	}
 
-	setHex( hex, colorSpace = SRGBColorSpace ) {
+	setHex( hex, colorSpace = SRGBColorSpace$1 ) {
 
 		hex = Math.floor( hex );
 
@@ -8710,7 +8710,7 @@ class Color {
 
 	}
 
-	setStyle( style, colorSpace = SRGBColorSpace ) {
+	setStyle( style, colorSpace = SRGBColorSpace$1 ) {
 
 		function handleAlpha( string ) {
 
@@ -8836,7 +8836,7 @@ class Color {
 
 	}
 
-	setColorName( style, colorSpace = SRGBColorSpace ) {
+	setColorName( style, colorSpace = SRGBColorSpace$1 ) {
 
 		// color keywords
 		const hex = _colorKeywords[ style.toLowerCase() ];
@@ -8909,7 +8909,7 @@ class Color {
 
 	}
 
-	getHex( colorSpace = SRGBColorSpace ) {
+	getHex( colorSpace = SRGBColorSpace$1 ) {
 
 		ColorManagement.fromWorkingColorSpace( _color.copy( this ), colorSpace );
 
@@ -8917,7 +8917,7 @@ class Color {
 
 	}
 
-	getHexString( colorSpace = SRGBColorSpace ) {
+	getHexString( colorSpace = SRGBColorSpace$1 ) {
 
 		return ( '000000' + this.getHex( colorSpace ).toString( 16 ) ).slice( - 6 );
 
@@ -8980,13 +8980,13 @@ class Color {
 
 	}
 
-	getStyle( colorSpace = SRGBColorSpace ) {
+	getStyle( colorSpace = SRGBColorSpace$1 ) {
 
 		ColorManagement.fromWorkingColorSpace( _color.copy( this ), colorSpace );
 
 		const r = _color.r, g = _color.g, b = _color.b;
 
-		if ( colorSpace !== SRGBColorSpace ) {
+		if ( colorSpace !== SRGBColorSpace$1 ) {
 
 			// Requires CSS Color Module Level 4 (https://www.w3.org/TR/css-color-4/).
 			return `color(${ colorSpace } ${ r.toFixed( 3 ) } ${ g.toFixed( 3 ) } ${ b.toFixed( 3 ) })`;
@@ -13017,7 +13017,7 @@ class WebGLCubeRenderTarget extends WebGLRenderTarget {
 
 			// @deprecated, r152
 			warnOnce( 'THREE.WebGLCubeRenderTarget: option.encoding has been replaced by option.colorSpace.' );
-			options.colorSpace = options.encoding === sRGBEncoding ? SRGBColorSpace : NoColorSpace;
+			options.colorSpace = options.encoding === sRGBEncoding ? SRGBColorSpace$1 : NoColorSpace;
 
 		}
 
@@ -19494,7 +19494,7 @@ function getEncodingComponents( colorSpace ) {
 		case LinearDisplayP3ColorSpace:
 			return [ gamutMapping, 'LinearTransferOETF' ];
 
-		case SRGBColorSpace:
+		case SRGBColorSpace$1:
 		case DisplayP3ColorSpace:
 			return [ gamutMapping, 'sRGBTransferOETF' ];
 
@@ -24908,7 +24908,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 			let mipmap;
 			const mipmaps = texture.mipmaps;
 
-			const useTexStorage = ( isWebGL2 && texture.isVideoTexture !== true && glInternalFormat !== RGB_ETC1_Format );
+			const useTexStorage = ( texture.isVideoTexture !== true );
 			const allocateMemory = ( sourceProperties.__version === undefined ) || ( forceUpload === true );
 			const levels = getMipLevels( texture, image, supportsMips );
 
@@ -26391,34 +26391,14 @@ function WebGLUtils( gl, extensions, capabilities ) {
 
 		}
 
-		// ETC1
-
-		if ( p === RGB_ETC1_Format ) {
-
-			extension = extensions.get( 'WEBGL_compressed_texture_etc1' );
-
-			if ( extension !== null ) {
-
-				return extension.COMPRESSED_RGB_ETC1_WEBGL;
-
-			} else {
-
-				return null;
-
-			}
-
-		}
-
-		// ETC2
-
-		if ( p === RGB_ETC2_Format || p === RGBA_ETC2_EAC_Format ) {
+		if ( p === RGB_ETC1_Format || p === RGB_ETC2_Format || p === RGBA_ETC2_EAC_Format ) {
 
 			extension = extensions.get( 'WEBGL_compressed_texture_etc' );
 
 			if ( extension !== null ) {
 
-				if ( p === RGB_ETC2_Format ) return ( transfer === SRGBTransfer ) ? extension.COMPRESSED_SRGB8_ETC2 : extension.COMPRESSED_RGB8_ETC2;
-				if ( p === RGBA_ETC2_EAC_Format ) return ( transfer === SRGBTransfer ) ? extension.COMPRESSED_SRGB8_ALPHA8_ETC2_EAC : extension.COMPRESSED_RGBA8_ETC2_EAC;
+				if ( p === RGB_ETC1_Format || p === RGB_ETC2_Format ) return ( colorSpace === SRGBColorSpace ) ? extension.COMPRESSED_SRGB8_ETC2 : extension.COMPRESSED_RGB8_ETC2;
+				if ( p === RGBA_ETC2_EAC_Format ) return ( colorSpace === SRGBColorSpace ) ? extension.COMPRESSED_SRGB8_ALPHA8_ETC2_EAC : extension.COMPRESSED_RGBA8_ETC2_EAC;
 
 			} else {
 
@@ -28701,7 +28681,7 @@ class WebGLRenderer {
 
 		// physically based shading
 
-		this._outputColorSpace = SRGBColorSpace;
+		this._outputColorSpace = SRGBColorSpace$1;
 
 		// physical lights
 
@@ -31215,14 +31195,14 @@ class WebGLRenderer {
 	get outputEncoding() { // @deprecated, r152
 
 		console.warn( 'THREE.WebGLRenderer: Property .outputEncoding has been removed. Use .outputColorSpace instead.' );
-		return this.outputColorSpace === SRGBColorSpace ? sRGBEncoding : LinearEncoding;
+		return this.outputColorSpace === SRGBColorSpace$1 ? sRGBEncoding : LinearEncoding;
 
 	}
 
 	set outputEncoding( encoding ) { // @deprecated, r152
 
 		console.warn( 'THREE.WebGLRenderer: Property .outputEncoding has been removed. Use .outputColorSpace instead.' );
-		this.outputColorSpace = encoding === sRGBEncoding ? SRGBColorSpace : LinearSRGBColorSpace;
+		this.outputColorSpace = encoding === sRGBEncoding ? SRGBColorSpace$1 : LinearSRGBColorSpace;
 
 	}
 
@@ -44764,7 +44744,7 @@ class CubeTextureLoader extends Loader {
 	load( urls, onLoad, onProgress, onError ) {
 
 		const texture = new CubeTexture();
-		texture.colorSpace = SRGBColorSpace;
+		texture.colorSpace = SRGBColorSpace$1;
 
 		const loader = new ImageLoader( this.manager );
 		loader.setCrossOrigin( this.crossOrigin );
@@ -54159,7 +54139,7 @@ exports.ReverseSubtractEquation = ReverseSubtractEquation;
 exports.RingGeometry = RingGeometry;
 exports.SIGNED_RED_GREEN_RGTC2_Format = SIGNED_RED_GREEN_RGTC2_Format;
 exports.SIGNED_RED_RGTC1_Format = SIGNED_RED_RGTC1_Format;
-exports.SRGBColorSpace = SRGBColorSpace;
+exports.SRGBColorSpace = SRGBColorSpace$1;
 exports.SRGBTransfer = SRGBTransfer;
 exports.Scene = Scene;
 exports.ShaderChunk = ShaderChunk;
